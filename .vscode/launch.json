@@ -1,0 +1,35 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+{
+	"version": "0.2.0",
+	"configurations": [
+		//{
+		//	"name": "Launch",
+		//	"type": "lldb",
+		//	"request": "launch",
+		//	"program": "${workspaceFolder}/ios/build/Debug-${command:ios-debug.targetSdk}/AwesomeProject.app",
+		//	"iosBundleId": "org.prism.rn.AwesomeProject",
+		//	"iosTarget": "select",
+		//	"preLaunchTask": "${defaultBuildTask}"
+		//},
+		//{
+		//	"name": "Launch without Installing",
+		//	"type": "lldb",
+		//	"request": "launch",
+		//	"program": "${workspaceFolder}/ios/build/Debug-${command:ios-debug.targetSdk}/AwesomeProject.app",
+		//	"iosBundleId": "org.prism.rn.AwesomeProject",
+		//	"iosTarget": "select",
+		//	"iosInstallApp": false,
+		//},
+		{
+			"name": "Attach",
+			"type": "lldb",
+			"request": "attach",
+			"program": "${workspaceFolder}/ios/build/Debug-${command:ios-debug.targetSdk}/AwesomeProject.app",
+			"iosBundleId": "org.prism.rn.AwesomeProject",
+			"iosTarget": "select",
+		},
+	]
+}

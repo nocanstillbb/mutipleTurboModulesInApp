@@ -1,0 +1,21 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=827846 to learn about workspace recommendations.
+	// Extension identifier format: ${publisher}.${name}. Example: vscode.csharp
+	// List of extensions which should be recommended for users of this workspace.
+	"recommendations": [
+		"dsznajder.es7-react-js-snippets",
+		"equimper.react-native-react-redux",
+		"github.copilot",
+		"github.copilot-chat",
+		"hecaiming.reactnative-start",
+		"llvm-vs-code-extensions.vscode-clangd",
+		"ms-vscode.cmake-tools",
+		"ms-vscode.cpptools",
+		"msjsdiag.vscode-react-native",
+		"nisargjhaveri.ios-debug",
+		"vadimcn.vscode-lldb",
+		"vscodevim.vim",
+	],
+	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
+	"unwantedRecommendations": []
+}

@@ -1,0 +1,22 @@
+
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-cotent-shell",
+            "type": "shell",
+            "command": "bash", 
+            "args": [
+                "-x",
+                "-c",
+                "yarn ios --simulator \"iPhone 14 Pro\""
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }
+
+    ]
+}

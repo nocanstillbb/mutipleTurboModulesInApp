@@ -1,0 +1,10 @@
+{
+    //  "C_Cpp.default.compileCommands": "${workspaceFolder}/ios/compile_commands.json"
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "clangd.arguments": [
+      "--compile-commands-dir=ios"
+    ],
+    "ios-debug.focusSimulator": true,
+    "ios-debug.shareLocalDevices": "ask"
+  }
+  

@@ -12,7 +12,7 @@ NativeViewModelA::NativeViewModelA(std::shared_ptr<CallInvoker> jsInvoker)
 
 jsi::String NativeViewModelA::getStr(jsi::Runtime &rt, jsi::String input)
 {
-  LOG_ERROR_F(rt,this->jsInvoker_, "get string with native view model A");
+  LOG_DEBUG_F(rt,this->jsInvoker_, "get string with native view model A");
   return input;
 }
 

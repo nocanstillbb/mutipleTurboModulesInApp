@@ -76,7 +76,7 @@ yarn-error.log
 
 
 # vs code
-.vscode
+#.vscode
 
 #ios
 ios/.cache
