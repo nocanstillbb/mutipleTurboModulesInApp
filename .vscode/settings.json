@@ -1,10 +1,27 @@
 {
-    //  "C_Cpp.default.compileCommands": "${workspaceFolder}/ios/compile_commands.json"
-    "C_Cpp.intelliSenseEngine": "disabled",
-    "clangd.arguments": [
-      "--compile-commands-dir=ios"
-    ],
-    "ios-debug.focusSimulator": true,
-    "ios-debug.shareLocalDevices": "ask"
-  }
-  
+  //"C_Cpp.default.compileCommands": "${workspaceFolder}/ios/compile_commands.json"
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "C_Cpp.formatting": "disabled",
+  "clangd.arguments": [
+    "--compile-commands-dir=ios"
+  ],
+
+
+
+  // 使用 clang-format 格式化
+  "[cpp]": {
+    "editor.defaultFormatter": "xaver.clang-format",
+    "editor.formatOnSave": true
+  },
+  "clang-format.style": "file",
+
+
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features",
+    "editor.formatOnSave": true
+  },
+
+
+  "ios-debug.focusSimulator": true,
+  "ios-debug.shareLocalDevices": "ask"
+}

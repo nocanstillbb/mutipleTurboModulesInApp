@@ -2,15 +2,15 @@
 #include <memory>
 #include <string>
 
-namespace facebook::react {
-class JSI_EXPORT NativeViewModelB :public NativeViewModelBCxxSpec<NativeViewModelB>
+namespace facebook::react
 {
-  
-  public :
-  NativeViewModelB(std::shared_ptr<CallInvoker> jsInvoker);
-  jsi::String getStr(jsi::Runtime &rt, jsi::String input);
-  
+class JSI_EXPORT NativeViewModelB : public NativeViewModelBCxxSpec<NativeViewModelB>
+{
+
+  public:
+    NativeViewModelB(std::shared_ptr<CallInvoker> jsInvoker);
+    jsi::String getStr(jsi::Runtime &rt, jsi::String input);
 };
 
-}
+} // namespace facebook::react
 // namespace facebook::react

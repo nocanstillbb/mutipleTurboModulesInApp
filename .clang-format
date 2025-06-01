@@ -1,0 +1,8 @@
+BasedOnStyle: Microsoft
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never         # 禁止使用 Tab，统一用空格
+BreakBeforeBraces: Allman  # 大括号总是换行（Allman 风格）
+AllowShortFunctionsOnASingleLine: None  # 函数体永远不写在一行
+ColumnLimit: 120
+

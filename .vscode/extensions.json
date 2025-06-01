@@ -15,6 +15,7 @@
 		"nisargjhaveri.ios-debug",
 		"vadimcn.vscode-lldb",
 		"vscodevim.vim",
+        "xaver.clang-format"
 	],
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
 	"unwantedRecommendations": []
