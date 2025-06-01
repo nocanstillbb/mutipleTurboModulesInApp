@@ -1,0 +1,3 @@
+[submodule "third-party/prism_rn"]
+	path = third-party/prism_rn
+	url = git@github.com:nocanstillbb/prism_rn.git

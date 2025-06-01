@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, StrictMode } from 'react';
 import {
   Button,
   SafeAreaView,
@@ -9,6 +9,14 @@ import {
 } from 'react-native';
 import ViewModelA from './specs/NativeViewModelA';
 import ViewModelB from './specs/NativeViewModelB';
+
+function SApp() {
+  return (<StrictMode>
+    <SafeAreaView style={styles.container}>
+      <App />
+    </SafeAreaView>
+  </StrictMode>)
+}
 
 function App(): React.JSX.Element {
   //const [value, setValue] = React.useState('');
@@ -22,8 +30,8 @@ function App(): React.JSX.Element {
   const [str1Value, setStr1Value] = React.useState('');
   const onPress1 = () => {
     const str1 = ViewModelA.getStr(value1);
-    setStr1Value(str1);
-  };
+    setStr1Value(v=>v=str1);
+  }
 
 
   const [value2, setValue2] = React.useState('');
@@ -34,35 +42,50 @@ function App(): React.JSX.Element {
   };
 
 
+  const [prismobj,_] = React.useState(ViewModelA.getObj);
+  const [__,forceUpdate] = React.useState(0);
+
+
+
+  const BtnComponent = memo(() => {
+    return (
+      <Button title="setstr1" onPress={p => {
+        onPress1();
+        prismobj.myint = prismobj.myint + 1;
+        prismobj.sub.subint += 1;
+        forceUpdate(v => v + 1)
+      }} />
+    )
+  })
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View>
-        <Text style={styles.title}>
-          Welcome to C++ Turbo Native Module Example
-        </Text>
-        <Text>Write down here he text you want to revert</Text>
+    <View>
+      <Text style={styles.title}>
+        Welcome to C++ Turbo Native Module Example {prismobj.myint}
+      </Text>
+      <Text>Write down here he text you want to revert {prismobj.sub.subint}</Text>
 
+      <BtnComponent/>
 
-        <TextInput
-          style={styles.textInput}
-          placeholder="Write your text here"
-          onChangeText={setValue1}
-          value={value1}
-        />
-        <Button title="setstr1" onPress={onPress1} />
-        <Text>Reversed text: {str1Value}</Text>
+      <TextInput
+        style={styles.textInput}
+        placeholder="Write your text here"
+        onChangeText={setValue1}
+        value={value1}
+      />
+      <Button title="print" onPress={() => ViewModelA.printObj()} />
+      <Text>Reversed text: {str1Value}</Text>
 
-        <TextInput
-          style={styles.textInput}
-          placeholder="Write your text here"
-          onChangeText={setValue2}
-          value={value2}
-        />
-        <Button title="setstr1" onPress={onPress2} />
-        <Text>Reversed text: {str2Value}</Text>
+      <TextInput
+        style={styles.textInput}
+        placeholder="Write your text here"
+        onChangeText={setValue2}
+        value={value2}
+      />
+      <Button title="setstr1" onPress={onPress2} />
+      <Text>Reversed text: {str2Value}</Text>
 
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -85,4 +108,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default SApp;

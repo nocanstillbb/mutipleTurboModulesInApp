@@ -34,3 +34,6 @@ target 'AwesomeProject' do
     )
   end
 end
+
+pod 'prism_rn', :path => '../third-party/prism_rn'
+

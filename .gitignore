@@ -73,3 +73,11 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+
+# vs code
+.vscode
+
+#ios
+ios/.cache
+ios/compile_commands.json
