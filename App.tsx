@@ -45,16 +45,17 @@ function App(): React.JSX.Element {
   const [prismobj,_] = React.useState(ViewModelA.getObj);
   const [__,forceUpdate] = React.useState(0);
 
+  const clickedFuna = React.useCallback(() => {
+        onPress1();
+        prismobj.sub_list.list[1].subint = prismobj.sub_list.list[1].subint + 1
+        prismobj.sub_list.list[1].substr = prismobj.sub_list.list[1].substr + 1
 
+        forceUpdate(v => v + 1)
+      },[]);
 
   const BtnComponent = memo(() => {
     return (
-      <Button title="setstr1" onPress={p => {
-        onPress1();
-        prismobj.myint = prismobj.myint + 1;
-        prismobj.sub.subint += 1;
-        forceUpdate(v => v + 1)
-      }} />
+      <Button title="setstr1" onPress={clickedFuna} />
     )
   })
 
@@ -63,9 +64,9 @@ function App(): React.JSX.Element {
       <Text style={styles.title}>
         Welcome to C++ Turbo Native Module Example {prismobj.myint}
       </Text>
-      <Text>Write down here he text you want to revert {prismobj.sub.subint}</Text>
+    <Text>.sub.substr   :{prismobj.sub_list.list[1].substr}</Text>
+    <Text>.sub.subint   :{prismobj.sub_list.list[1].subint}</Text>
 
-      <BtnComponent/>
 
       <TextInput
         style={styles.textInput}
@@ -73,6 +74,7 @@ function App(): React.JSX.Element {
         onChangeText={setValue1}
         value={value1}
       />
+      <BtnComponent/>
       <Button title="print" onPress={() => ViewModelA.printObj()} />
       <Text>Reversed text: {str1Value}</Text>
 

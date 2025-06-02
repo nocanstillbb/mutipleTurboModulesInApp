@@ -14,18 +14,20 @@ struct SubClass
 };
 PRISM_FIELDS(SubClass, subint, substr);
 
+using prismModelListProxySubClass = prism::rn::PrismModelListProxy<SubClass>;
+
 struct Test
 {
     int myint = 1133;
     double mydouble = 3.1415926;
-    std::shared_ptr<prism::rn::PrismModelProxy<SubClass>> sub =
-        std::make_shared<prism::rn::PrismModelProxy<SubClass>>();
+    std::shared_ptr<prism::rn::PrismModelProxy<SubClass>> sub = std::make_shared<prism::rn::PrismModelProxy<SubClass>>();
+
+    std::shared_ptr<prismModelListProxySubClass> sub_list = std::make_shared<prismModelListProxySubClass>();
 };
 
-PRISM_FIELDS(Test, myint, mydouble, sub);
+PRISM_FIELDS(Test, myint, mydouble, sub, sub_list);
 
 using prismModelProxy_Test = prism::rn::PrismModelProxy<Test>;
-using prismModelListProxy_Test = prism::rn::PrismModelListProxy<Test>;
 
 namespace facebook::react
 {
@@ -37,12 +39,10 @@ class JSI_EXPORT NativeViewModelA : public NativeViewModelACxxSpec<NativeViewMod
     NativeViewModelA(std::shared_ptr<CallInvoker> jsInvoker);
     jsi::String getStr(jsi::Runtime &rt, jsi::String input);
     jsi::Object getObj(jsi::Runtime &rt);
-    jsi::Object getArray(jsi::Runtime &rt);
     void printObj(jsi::Runtime &rt);
 
   private:
-    std::shared_ptr<prismModelProxy_Test> test_ = nullptr;
-    std::shared_ptr<prismModelListProxy_Test> test_array = nullptr;
+    std::shared_ptr<prismModelProxy_Test> test_ = std::make_shared<prismModelProxy_Test>();
 };
 
 } // namespace facebook::react

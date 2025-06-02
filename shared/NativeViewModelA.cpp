@@ -4,14 +4,16 @@
 #include <memory>
 #include <prism/rn/prismLog.h>
 #include <prism/rn/prismRnJson.hpp>
+#include <signal.h>
+#include <string>
 
 namespace facebook::react
 {
 
 // NativeViewModelA constructor initializes the CxxSpec with the provided jsInvoker
-NativeViewModelA::NativeViewModelA(std::shared_ptr<CallInvoker> jsInvoker)
-    : NativeViewModelACxxSpec(std::move(jsInvoker))
+NativeViewModelA::NativeViewModelA(std::shared_ptr<CallInvoker> jsInvoker) : NativeViewModelACxxSpec(std::move(jsInvoker))
 {
+    // raise(SIGSTOP); // 中断
     prism::Container::get()->register_instance(jsInvoker);
 }
 
@@ -25,34 +27,36 @@ jsi::String NativeViewModelA::getStr(jsi::Runtime &rt, jsi::String input)
 // This function creates a jsi::Object from a PrismModelProxy<Test> instance
 jsi::Object NativeViewModelA::NativeViewModelA::getObj(jsi::Runtime &rt)
 {
-    LOG_DEBUG_F(rt, this->jsInvoker_, "get object");
-    if (!test_)
-        test_ = std::make_shared<prismModelProxy_Test>();
-    return jsi::Object::createFromHostObject(rt, test_);
-}
-
-jsi::Object NativeViewModelA::getArray(jsi::Runtime &rt)
-{
-    LOG_DEBUG_F(rt, this->jsInvoker_, "get array");
-    if (!test_array)
+    if (test_->instance()->sub_list->list()->empty())
     {
-        test_array = std::make_shared<prismModelListProxy_Test>();
-        test_array->list()->push_back(std::make_shared<prismModelProxy_Test>());
-        test_array->list()->push_back(std::make_shared<prismModelProxy_Test>());
-        test_array->list()->push_back(std::make_shared<prismModelProxy_Test>());
+
+        test_->instance()->sub_list->list()->push_back(std::make_shared<prism::rn::PrismModelProxy<SubClass>>());
+        test_->instance()->sub_list->list()->back()->instance()->subint = 1;
+        test_->instance()->sub_list->list()->back()->instance()->substr = "str 1";
+
+        test_->instance()->sub_list->list()->push_back(std::make_shared<prism::rn::PrismModelProxy<SubClass>>());
+        test_->instance()->sub_list->list()->back()->instance()->subint = 2;
+        test_->instance()->sub_list->list()->back()->instance()->substr = "str 2";
+
+        test_->instance()->sub_list->list()->push_back(std::make_shared<prism::rn::PrismModelProxy<SubClass>>());
+        test_->instance()->sub_list->list()->back()->instance()->subint = 3;
+        test_->instance()->sub_list->list()->back()->instance()->substr = "str 3";
+
+        std::string json1 = prism::json::toJsonString(test_);
+        LOG_DEBUG_F(rt, this->jsInvoker_, "json1 : {}", json1.c_str());
+        auto test_2 = prism::json::fromJsonString<prismModelProxy_Test>(json1);
+        std::string json2 = prism::json::toJsonString(test_2);
+        LOG_DEBUG_F(rt, this->jsInvoker_, "json2 : {}", json2.c_str());
     }
-    return jsi::Object::createFromHostObject(rt, test_array);
+
+    LOG_DEBUG_F(rt, this->jsInvoker_, "get object");
+    return jsi::Object::createFromHostObject(rt, test_);
 }
 
 void NativeViewModelA::printObj(jsi::Runtime &rt)
 {
-    if (test_)
-    {
-        std::string json1 = prism::json::toJsonString(*test_->instance());
-        LOG_DEBUG_F(rt, this->jsInvoker_, "json1 : {}", json1.c_str());
-        std::shared_ptr<Test> des = prism::json::fromJsonString<Test>(json1);
-        LOG_DEBUG_F(rt, this->jsInvoker_, "json2 : {}", prism::json::toJsonString(des).c_str());
-    }
+    std::string json1 = prism::json::toJsonString(test_);
+    LOG_DEBUG_F(rt, this->jsInvoker_, "object json : {}", json1.c_str());
 }
 
 } // namespace facebook::react
