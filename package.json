@@ -10,23 +10,26 @@
     "test": "jest"
   },
   "codegenConfig": {
-      "name": "ViewmodelsSpecs",
-      "type": "modules",
-      "jsSrcsDir": "specs",
-      "android": {
-          "javaPackageName": "com.viewmodels.specs"
-      },
-     "ios": {
-        "modulesProvider": {
-          "NativeViewModelA":  "ViewmodelsProvider",
-          "NativeViewModelB":  "ViewmodelsProvider"
-        }
-     }
-
+    "name": "ViewmodelsSpecs",
+    "type": "modules",
+    "jsSrcsDir": "specs",
+    "android": {
+      "javaPackageName": "com.viewmodels.specs"
+    },
+    "ios": {
+      "modulesProvider": {
+        "NativeViewModelA": "ViewmodelsProvider",
+        "NativeViewModelB": "ViewmodelsProvider"
+      }
+    }
   },
   "dependencies": {
+    "@rneui/base": "^4.0.0-rc.8",
+    "@rneui/themed": "^4.0.0-rc.8",
     "react": "19.0.0",
-    "react-native": "0.79.2"
+    "react-native": "0.79.2",
+    "react-native-safe-area-context": "^5.4.1",
+    "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -1,4 +1,5 @@
 import React, { memo, StrictMode } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   Button,
   SafeAreaView,
@@ -11,11 +12,15 @@ import ViewModelA from './specs/NativeViewModelA';
 import ViewModelB from './specs/NativeViewModelB';
 
 function SApp() {
-  return (<StrictMode>
-    <SafeAreaView style={styles.container}>
-      <App />
-    </SafeAreaView>
-  </StrictMode>)
+  return (
+    <StrictMode>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
+          <App />
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </StrictMode>
+  );
 }
 
 function App(): React.JSX.Element {
