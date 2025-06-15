@@ -1,6 +1,7 @@
 import { TurboModule, TurboModuleRegistry } from 'react-native';
 
 interface SubClass {
+  uuid: string;
   subint: number;
   substr: string;
 }

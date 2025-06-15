@@ -9,6 +9,12 @@
 
 struct SubClass
 {
+    SubClass()
+    {
+    }
+    SubClass(int i) : substr(std::to_string(i)), subint(i)
+    {
+    }
     int subint = 123;
     std::string substr = "subclass";
 };

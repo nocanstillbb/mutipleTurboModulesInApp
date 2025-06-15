@@ -1,11 +1,12 @@
-#include "NativeViewModelA.h"
-#include "jsi/jsi.h"
-#include "prism/container.hpp"
+#include <jsi/jsi.h>
 #include <memory>
 #include <prism/rn/prismLog.h>
 #include <prism/rn/prismRnJson.hpp>
 #include <signal.h>
 #include <string>
+
+#include "NativeViewModelA.h"
+#include "prism/container.hpp"
 
 namespace facebook::react
 {
@@ -29,18 +30,10 @@ jsi::Object NativeViewModelA::NativeViewModelA::getObj(jsi::Runtime &rt)
 {
     if (test_->instance()->sub_list->list()->empty())
     {
-
-        test_->instance()->sub_list->list()->push_back(std::make_shared<prism::rn::PrismModelProxy<SubClass>>());
-        test_->instance()->sub_list->list()->back()->instance()->subint = 1;
-        test_->instance()->sub_list->list()->back()->instance()->substr = "str 1";
-
-        test_->instance()->sub_list->list()->push_back(std::make_shared<prism::rn::PrismModelProxy<SubClass>>());
-        test_->instance()->sub_list->list()->back()->instance()->subint = 2;
-        test_->instance()->sub_list->list()->back()->instance()->substr = "str 2";
-
-        test_->instance()->sub_list->list()->push_back(std::make_shared<prism::rn::PrismModelProxy<SubClass>>());
-        test_->instance()->sub_list->list()->back()->instance()->subint = 3;
-        test_->instance()->sub_list->list()->back()->instance()->substr = "str 3";
+        for (int i = 0; i < 9 * 9; ++i)
+        {
+            test_->instance()->sub_list->list()->emplace_back(std::make_shared<prism::rn::PrismModelProxy<SubClass>>(i));
+        }
 
         std::string json1 = prism::json::toJsonString(test_);
         LOG_DEBUG_F(rt, this->jsInvoker_, "json1 : {}", json1.c_str());
