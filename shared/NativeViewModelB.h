@@ -1,6 +1,5 @@
 #include "ViewmodelsSpecsJSI.h"
 #include <memory>
-#include <string>
 
 namespace facebook::react
 {

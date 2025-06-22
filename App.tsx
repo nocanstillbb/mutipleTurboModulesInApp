@@ -5,12 +5,12 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View
+  View,
 } from 'react-native';
 import { Button } from '@rneui/themed';
-import    AppThemeProvider   from "./theme";
+import    AppThemeProvider   from './theme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Header } from "@rneui/base";
+import { Header } from '@rneui/base';
 import Minesweeper from  './views/Minesweeper';
 
 
@@ -18,13 +18,15 @@ function App() {
   return (
     <StrictMode>
       <SafeAreaProvider>
-        <SafeAreaView style={styles.container}>
-          <GestureHandlerRootView>
+        {/* <SafeAreaView style={styles.container}>
+        </SafeAreaView> */}
+        <View style={styles.container}>
+          <GestureHandlerRootView >
             <AppThemeProvider>
               <Minesweeper />
             </AppThemeProvider>
           </GestureHandlerRootView>
-        </SafeAreaView>
+        </View>
       </SafeAreaProvider>
     </StrictMode>
   );
@@ -41,15 +43,15 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    marginBottom: 20
+    marginBottom: 20,
   },
   textInput: {
     borderColor: 'black',
     borderWidth: 1,
     borderRadius: 5,
     padding: 10,
-    marginTop: 10
-  }
+    marginTop: 10,
+  },
 });
 
 

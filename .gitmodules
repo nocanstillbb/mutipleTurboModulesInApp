@@ -1,3 +1,6 @@
 [submodule "third-party/prism_rn"]
 	path = third-party/prism_rn
 	url = git@github.com:nocanstillbb/prism_rn.git
+[submodule "third-party/eigen3"]
+	path = third-party/eigen3
+	url = git@github.com:nocanstillbb/eigen3.git

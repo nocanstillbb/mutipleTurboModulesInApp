@@ -1,33 +1,31 @@
+import ViewModelA from '../../specs/NativeViewModelA';
+import { EventSubscription } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { TextInput } from 'react-native-gesture-handler';
-import { Button } from '@rneui/base';
-import { FlatList, Text, View, StyleSheet, Dimensions } from 'react-native';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer } from 'react';
+import { Gesture, GestureDetector, PanGestureHandler, PinchGestureHandler, TextInput } from 'react-native-gesture-handler';
+import { Button, color } from '@rneui/base';
+  
+import {LayoutChangeEvent,TouchableWithoutFeedback, FlatList, Text, View, StyleSheet, Dimensions, Alert } from 'react-native';
 import Animated, {
     useSharedValue,
-    useAnimatedGestureHandler,
     useAnimatedStyle,
-    withDecay,
-    withTiming,
+    useAnimatedGestureHandler,
 } from 'react-native-reanimated';
 import {
-    PanGestureHandler,
-    PinchGestureHandler,
     GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 
-import ViewModelA from '../../specs/NativeViewModelA';
-import { LayoutChangeEvent } from 'react-native';
 
+const vm = ViewModelA.getMinesVm()
+const mines = vm.mines.list;
 
-
-const numRows = 9;
-const numColumns = 9;
+const numRows = vm.row_num;
+const numColumns = vm.col_num;
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
-const cellSize = 100;
+const cellSize = 40;
 const actualHeight = cellSize * numRows;
 const actualWidth = cellSize * numColumns;
 
@@ -36,9 +34,6 @@ const MAX_SCALE = 3;
 
 export default function Minesweeper(): React.JSX.Element {
 
-    const [obj, setObj] = useState(ViewModelA.getObj)
-    const [mines, setMines] = useState(obj.sub_list.list)
-
     if (actualHeight > actualWidth) {
         MIN_SCALE = screenHeight / actualHeight;
     }
@@ -46,42 +41,28 @@ export default function Minesweeper(): React.JSX.Element {
         MIN_SCALE = screenWidth / actualWidth;
     }
 
-    const scale = useSharedValue(MIN_SCALE);
+    const scale = useSharedValue(1);
+    //const scale = useSharedValue(MIN_SCALE);
     const offsetX = useSharedValue(0);
     const offsetY = useSharedValue(0);
-    const xyHand = useSharedValue(0);
+    const focalX = useSharedValue(0);
+    const focalY = useSharedValue(0);
+    const xyHand = useSharedValue(0)
+
+    const pre_focalDeltaX = useSharedValue(0);
+    const pre_focalDeltaY = useSharedValue(0);
+
+    const pre_numberofpointer = useSharedValue(0)
+
+    const pre_eventFocalX = useSharedValue(0)
+    const pre_eventFocalY = useSharedValue(0)
+
 
     const pinchRef = useRef(null);
     const panRef = useRef(null);
 
-    const containerSize = useState({ width: 0, height: 0 })[0];
-    const childSize = useState({ width: 0, height: 0 })[0];
-
-    const hasCentered = useRef(false);
-
-    const onContainerLayout = (e: LayoutChangeEvent) => {
-        //if (hasCentered.current) return;
-        containerSize.width = e.nativeEvent.layout.width;
-        containerSize.height = e.nativeEvent.layout.height;
-    };
-
     const insets = useSafeAreaInsets();
-    const onChildLayout = (e: LayoutChangeEvent) => {
-        if (hasCentered.current) return;
-        hasCentered.current = true;
-        childSize.width = e.nativeEvent.layout.width;
-        childSize.height = e.nativeEvent.layout.height;
-        offsetY.value = -insets.top ;
-    };
 
-    //useEffect(() => {
-    //    const timeout = setTimeout(() => {
-    //        offsetX.value = withTiming((containerSize.width - childSize.width) / 2);
-    //        offsetY.value = withTiming((containerSize.height - childSize.height) / 2);
-    //    }, 50);
-
-    //    return () => clearTimeout(timeout);
-    //}, []);
 
 
 
@@ -89,42 +70,97 @@ export default function Minesweeper(): React.JSX.Element {
 
     const pinchHandler = useAnimatedGestureHandler<any>({
         onStart: (event, ctx: any) => {
+            console.log(1111111)
             ctx.startScale = scale.value;
             ctx.startOffsetX = offsetX.value;
             ctx.startOffsetY = offsetY.value;
             ctx.focalX = event.focalX;
             ctx.focalY = event.focalY;
+
+            ctx.translationX0 = event.translationX
+            ctx.translationY0 = event.translationY
             xyHand.value = 0
         },
         onActive: (event, ctx: any) => {
-            let newScale = ctx.startScale * event.scale;
-            newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
+            console.log(1111112)
 
-            const scaleDiff = newScale / ctx.startScale;
-            const focalDeltaX =  event.focalX - ctx.focalX ;
-            const focalDeltaY =  event.focalY - ctx.focalY ;
 
-            // 正确的补偿公式
-            offsetX.value = ctx.startOffsetX + focalDeltaX+ (scaleDiff - 1) * ((actualWidth / 2) - ctx.focalX  + ctx.startOffsetX);
-            offsetY.value = ctx.startOffsetY + focalDeltaY+ (scaleDiff - 1) * ((actualHeight / 2) - ctx.focalY + ctx.startOffsetY);
+            if(xyHand.value==1)
+            {
+
+                let newScale = ctx.startScale * event.scale;
+                newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
+
+                const scaleDiff = newScale / ctx.startScale;
+                let focalDeltaX = event.focalX - ctx.focalX;
+                let focalDeltaY = event.focalY - ctx.focalY;
+
+
+
+                console.log(1111113,"  event.focalY:",event.focalY)
+
+                if(pre_numberofpointer.value!= event.numberOfPointers )
+                {
+                console.log(22222222)
+                    if( event.numberOfPointers<2)
+                    {
+                console.log(22222223)
+                        focalX.value = pre_focalDeltaX.value - focalDeltaX
+                        focalY.value = pre_focalDeltaY.value - focalDeltaY
+                    }
+                    else
+                    {
+                console.log(22222224)
+                        focalX.value =0
+                        focalY.value =0
+                        //focalDeltaX = event.focalX - ctx.focalX;
+                        //focalDeltaY = event.focalY - ctx.focalY;
+                    } 
+                }
+
+                // 正确的补偿公式
+                offsetX.value =focalX.value + ctx.startOffsetX + focalDeltaX + (scaleDiff - 1) * ((actualWidth / 2) - ctx.focalX + ctx.startOffsetX);
+                offsetY.value =focalY.value + ctx.startOffsetY + focalDeltaY + (scaleDiff - 1) * ((actualHeight / 2) - ctx.focalY + ctx.startOffsetY);
+
+                pre_numberofpointer.value = event.numberOfPointers
+                pre_focalDeltaX.value = focalDeltaX
+                pre_focalDeltaY.value = focalDeltaY
+                pre_eventFocalX.value = event.focalX
+                pre_eventFocalY.value = event.focalY
+
+                scale.value = newScale;
+            }
+            else {
+
+                console.log(1111114)
+            }
+
+
             xyHand.value = 0
 
-            scale.value = newScale;
         },
     })
 
 
     const panHandler = useAnimatedGestureHandler({
-        onStart: (_, ctx: any) => {
+        onStart: (event, ctx: any) => {
+            console.log(1111115)
             ctx.startX = offsetX.value;
             ctx.startY = offsetY.value;
+            ctx.translationX0 = event.translationX
+            ctx.translationY0 = event.translationY
             xyHand.value = 1
         },
         onActive: (event, ctx: any) => {
-            if(xyHand.value!=0)
-            {
-                offsetX.value = ctx.startX + event.translationX;
-                offsetY.value = ctx.startY + event.translationY;
+            console.log(1111116)
+
+            if (xyHand.value == 1) {
+                console.log(1111117)
+                offsetX.value = ctx.startX + event.translationX - ctx.translationX0;
+                offsetY.value = ctx.startY + event.translationY - ctx.translationY0;
+            }
+            else {
+                console.log(1111118)
             }
             xyHand.value = 1
 
@@ -142,60 +178,180 @@ export default function Minesweeper(): React.JSX.Element {
     });
 
 
-    const renderItem = ({ item, index }: { item: typeof mines[0], index: number }) => {
+    const RenderItem = ({ item, index }: { item: typeof mines[0], index: number }) => {
+
+
+        const [_, forceupdate] = useState(item);
+        item.notifyUI = forceupdate;
         return (
-            <View style={[{ width: cellSize, height: cellSize }, styles.item]}>
-                <View style={[{
-                    backgroundColor: "#e0e0e0",
-                    position: "absolute",
-                    top: (Math.floor(index / numColumns) === 0 ? 0 : 5),
-                    left: (Math.floor(index % numColumns) === 0 ? 0 : 5),
-                    right: 0,
-                    bottom: 0,
-                    flex: 1,
-                    justifyContent: "center"
-                }]} >
-                    <TextInput
-                        style={styles.text}
-                        onChangeText={() => {
-                            item.substr = item.substr + "1"
-                        }}
-                    />
-                    <Button onPress={() => {
-                    }} />
+            <TouchableWithoutFeedback onPress={() => {
+                console.log('点击了' + index)
+                ViewModelA.open(index)
+            }}>
+                <View style={[{ width: cellSize, height: cellSize }, styles.item]}>
+                    <View style={[{
+                        backgroundColor: (() => {
+                            if (item.visual_value == 10)
+                                return "red";
+                            else if (item.visual_value != -1)
+                                return "transparent"
+                            return "#e0e0e0";
+                        })(),
+                        position: "absolute",
+                        top: (Math.floor(index / numColumns) === 0 ? 0 : 3),
+                        left: (Math.floor(index % numColumns) === 0 ? 0 : 3),
+                        right: 0,
+                        bottom: 0,
+                        flex: 1,
+                        justifyContent: "center"
+                    }]} >
+                        <Text
+                            style={[styles.text, {
+                                color: (() => {
+                                    if (item.visual_value === 1)
+                                        return "#0100fe"
+                                    else if (item.visual_value === 2)
+                                        return "#017f01"
+                                    else if (item.visual_value === 3)
+                                        return "#fe0000"
+                                    else if (item.visual_value === 4)
+                                        return "#010080"
+                                    else if (item.visual_value === 5)
+                                        return "#810102"
+                                    else if (item.visual_value === 6)
+                                        return "#008081"
+                                    else if (item.visual_value === 7)
+                                        return "#000000"
+                                    else if (item.visual_value === 8)
+                                        return "#808080"
+                                    else
+                                        return "black"
+                                })()
+                                ,
+                                fontSize: cellSize / 2.5,
+                                fontWeight: 'bold'
+                            }]}
+
+                        >
+                            {
+                                item.visual_value === 9 || item.visual_value === 10 ? "💣"
+                                    : item.visual_value === -1 || item.visual_value === 0 ? ""
+                                        : item.visual_value === 11 ? "🚩"
+                                            : item.visual_value === 12 ? "❓"
+                                                : item.visual_value?.toString()
+                            }
+                        </Text>
+
+                        <View
+                            style={{
+                                backgroundColor: "transparent",
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}>
+                            <View style={{ width: '100%', height: '100%' }} />
+                        </View>
+
+                    </View>
                 </View>
-            </View>
+            </TouchableWithoutFeedback>
         );
-    }
+    };
 
     return (
-        <GestureHandlerRootView   onLayout={onContainerLayout} style={{ flex: 1, overflow: "hidden", backgroundColor: "pink" }}>
-            {/* 双指缩放 */}
-            <PinchGestureHandler onGestureEvent={pinchHandler} ref={pinchRef} >
-                <Animated.View >
-                    {/* 单指移动 */}
-                    <PanGestureHandler onGestureEvent={panHandler} ref={panRef} simultaneousHandlers={pinchRef} >
-                        <Animated.View onLayout={onChildLayout} style={[animatedStyle, { width: actualWidth, height: actualHeight, borderWidth: 3, borderColor: "black" }]}>
-                            <FlatList
-                                data={mines}
-                                bounces={false}
-                                overScrollMode="never"
-                                contentContainerStyle={[styles.flatlist]}
-                                renderItem={renderItem}
-                                numColumns={numColumns}
-                                keyExtractor={(item) => item.uuid}
-                                scrollEnabled={false} // 禁止内建滚动，靠 pan 拖动
-                            />
-                        </Animated.View>
-                    </PanGestureHandler>
-                </Animated.View>
-            </PinchGestureHandler>
-        </GestureHandlerRootView>
+        <View style={{ flex: 1 }}>
+            {/* 顶部 safe area 区域背景色 */}
+            <View style={{ height: insets.top - 12, width: screenWidth, backgroundColor: (() => styles.noneClinetArea.color)() }} />
+
+            {/* 主内容区域 */}
+            <View style={{ flex: 1, backgroundColor: 'white' }}>
+                <View style={{
+                    position: 'absolute',
+                    //left: -screenWidth / 2,
+                    left: 0,
+                    top: 0,
+                    width: screenWidth,
+                    height: screenHeight - insets.top + 12,
+                    // height: screenHeight - insets.bottom - insets.top, 
+                    overflow: 'hidden',
+                }}>
+                    <View style={[styles.insetBox, { alignItems: 'center', width: '100%', backgroundColor: (() => styles.noneClinetArea.color)() }]}>
+                        <Button
+                            onPress={() => {
+                                ViewModelA.regen()
+                                setTimeout(() => {
+                                    offsetX.value = 0;
+                                    offsetY.value = 0;
+                                    scale.value = 1
+                                }, 1);
+                            }}
+                            title="🙂"
+                            buttonStyle={{
+                                borderColor: 'rgba(78, 116, 289, 1)',
+                            }}
+                            type="outline"
+                            raised
+                            titleStyle={{ color: 'rgba(78, 116, 289, 1)' }}
+                            containerStyle={{
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginHorizontal: 0,
+                                marginVertical: 0,
+                            }}
+                        />
+
+                    </View>
+
+                    <GestureHandlerRootView
+                        style={
+                            {
+                                flex: 1,
+                                overflow: "hidden",
+                                backgroundColor: (() => styles.noneClinetArea.color2)()
+                            }
+                        }
+                    >
+                        <PinchGestureHandler onGestureEvent={pinchHandler} ref={pinchRef}  >
+                            <Animated.View >
+                                <PanGestureHandler onGestureEvent={panHandler} ref={panRef} simultaneousHandlers={pinchRef} >
+                                    <Animated.View style={[animatedStyle, { width: actualWidth, height: actualHeight, borderWidth: 3, borderColor: "lightgray" }]}>
+                                        <FlatList
+                                            data={mines}
+                                            bounces={false}
+                                            overScrollMode="never"
+                                            contentContainerStyle={[styles.flatlist]}
+                                            renderItem={({ item, index }) => <RenderItem item={item} index={index} />}
+                                            numColumns={numColumns}
+                                            initialNumToRender={mines.length}
+                                            keyExtractor={(item) => item.uuid}
+                                            scrollEnabled={false} // 禁止内建滚动，靠 pan 拖动
+                                        />
+                                    </Animated.View>
+                                </PanGestureHandler>
+                            </Animated.View>
+                        </PinchGestureHandler>
+                    </GestureHandlerRootView>
+                </View>
+            </View>
+
+            {/* 底部 safe area 区域背景色 */}
+            {/* <View style={{ height: insets.bottom, backgroundColor: (()=> styles.noneClinetArea.color)() }} /> */}
+        </View>
+
+
 
     );
 }
 
 const styles = StyleSheet.create({
+    noneClinetArea: {
+        color: "#lightgray",
+        color2: "#gray",
+    },
     flatContainer: {
         //flex: 1,
         backgroundColor: "#33101010",
@@ -211,13 +367,35 @@ const styles = StyleSheet.create({
     },
     item: {
         borderWidth: 1,
-        borderColor: 'transparent',
+        borderColor: 'gray',
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'transparent',
         overflow: "hidden"
     },
     text: {
+        textAlign: 'center',
+        textAlignVertical: "center",
+        justifyContent: 'center',
+        alignItems: 'center',
         fontSize: 16,
+    },
+    insetBox: {
+        width: 150,
+        height: 50,
+        backgroundColor: '#e0e0e0',
+        borderRadius: 0,
+        // 模拟 inner shadow
+        shadowColor: '#000',
+        shadowOffset: { width: -5, height: -5 },
+        shadowOpacity: 0.2,
+        shadowRadius: 0,
+        elevation: 10,
+
+        // 叠加暗角
+        borderWidth: 1,
+        borderColor: '#a3a3a3',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

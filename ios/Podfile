@@ -36,4 +36,5 @@ target 'AwesomeProject' do
 end
 
 pod 'prism_rn', :path => '../third-party/prism_rn'
+pod 'eigen3', :path => '../third-party/eigen3'
 

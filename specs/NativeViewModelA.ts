@@ -1,26 +1,34 @@
 import { TurboModule, TurboModuleRegistry } from 'react-native';
+import type { EventEmitter } from 'react-native/Libraries/Types/CodegenTypes';
 
-interface SubClass {
+export interface Mine {
   uuid: string;
-  subint: number;
-  substr: string;
+  value: number;
+  visual_value: number;
+  isPressed: boolean;
+  isLastPressed: boolean;
+  notifyUI: Function;
 }
+type Mines = { uuid: string, length: number; list: Array<Mine> };
 
-type PrismListProxy = { length: number; list: Array<SubClass> };
-type TestClass = {
-  myint: number;
-  mydouble: number;
-  sub: SubClass,
-  sub_list: PrismListProxy
+type MineVM = {
+  uuid: string;
+  mode: number;
+  row_num: number;
+  col_num: number;
+  mine_num: number;
+  mines: Mines
 };
 
 
 export interface Spec extends TurboModule {
-  readonly getStr: (input: string) => string;
 
-  readonly getObj: () => TestClass;
-  readonly printObj: () => void;
+  readonly getMinesVm: () => MineVM;
+  readonly open: (i: number) => void;
+  readonly regen: () => void;
+  readonly onValueChanged: EventEmitter<number>
 }
+
 export default TurboModuleRegistry.getEnforcing<Spec>('NativeViewModelA');
 
 
