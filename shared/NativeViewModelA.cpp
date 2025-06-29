@@ -152,7 +152,7 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
             {
                 cell->instance()->visual_value = v;
                 // emitOnValueChanged(row * cols + col);
-                cell->notifyUi(*rt);
+                cell->notifyUi(rt);
             }
         }
     }
@@ -167,7 +167,7 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
                 {
                     cell->instance()->visual_value = 11;
                     // emitOnValueChanged(row * cols + col);
-                    cell->notifyUi(*rt);
+                    cell->notifyUi(rt);
                 }
             }
         }
@@ -252,7 +252,7 @@ void NativeViewModelA::private_regen()
         }
         // emitOnValueChanged(i);
         if (this->rt_)
-            cell->notifyUi(*rt_);
+            cell->notifyUi(rt_);
     }
 }
 
@@ -284,7 +284,7 @@ void NativeViewModelA::recurse_open(int i)
             cell->instance()->visual_value = v;
             // emitOnValueChanged(j);
             if (this->rt_)
-                cell->notifyUi(*rt_);
+                cell->notifyUi(rt_);
             if (i != j && v == 0)
             {
                 diff.insert(j);
