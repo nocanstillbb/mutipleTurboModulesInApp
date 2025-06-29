@@ -2,7 +2,6 @@ import ViewModelA from '../../specs/NativeViewModelA';
 import { EventSubscription } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer } from 'react';
-import { Gesture, GestureDetector, PanGestureHandler, PinchGestureHandler, TextInput } from 'react-native-gesture-handler';
 import { Button, color } from '@rneui/base';
   
 import {LayoutChangeEvent,TouchableWithoutFeedback, FlatList, Text, View, StyleSheet, Dimensions, Alert } from 'react-native';
@@ -10,10 +9,10 @@ import Animated, {
     useSharedValue,
     useAnimatedStyle,
     useAnimatedGestureHandler,
+    runOnJS,
 } from 'react-native-reanimated';
-import {
-    GestureHandlerRootView,
-} from 'react-native-gesture-handler';
+
+import {GestureHandlerRootView, Gesture, GestureDetector, PanGestureHandler, PinchGestureHandler, TextInput } from 'react-native-gesture-handler';
 
 
 const vm = ViewModelA.getMinesVm()
@@ -30,7 +29,9 @@ const actualHeight = cellSize * numRows;
 const actualWidth = cellSize * numColumns;
 
 var MIN_SCALE = 1;
-const MAX_SCALE = 3;
+const MAX_SCALE = 8;
+
+
 
 export default function Minesweeper(): React.JSX.Element {
 
@@ -41,21 +42,26 @@ export default function Minesweeper(): React.JSX.Element {
         MIN_SCALE = screenWidth / actualWidth;
     }
 
+    const [pinchEnabled, setPinchEnabled] = useState(true);
+    const [panEnabled, setPanEnabled] = useState(true);
+
+
     const scale = useSharedValue(1);
     //const scale = useSharedValue(MIN_SCALE);
     const offsetX = useSharedValue(0);
     const offsetY = useSharedValue(0);
-    const focalX = useSharedValue(0);
-    const focalY = useSharedValue(0);
+    const x_basi = useSharedValue(0);
+    const y_basi = useSharedValue(0);
     const xyHand = useSharedValue(0)
 
     const pre_focalDeltaX = useSharedValue(0);
     const pre_focalDeltaY = useSharedValue(0);
+    const pre_eventFocalX = useSharedValue(0);
+    const pre_eventFocalY = useSharedValue(0);
+
 
     const pre_numberofpointer = useSharedValue(0)
 
-    const pre_eventFocalX = useSharedValue(0)
-    const pre_eventFocalY = useSharedValue(0)
 
 
     const pinchRef = useRef(null);
@@ -76,67 +82,91 @@ export default function Minesweeper(): React.JSX.Element {
             ctx.startOffsetY = offsetY.value;
             ctx.focalX = event.focalX;
             ctx.focalY = event.focalY;
-
-            ctx.translationX0 = event.translationX
-            ctx.translationY0 = event.translationY
-            xyHand.value = 0
+            xyHand.value = -1
         },
         onActive: (event, ctx: any) => {
             console.log(1111112)
 
+            let focalDeltaX = event.focalX - ctx.focalX;
+            let focalDeltaY = event.focalY - ctx.focalY;
 
-            if(xyHand.value==1)
-            {
-
-                let newScale = ctx.startScale * event.scale;
-                newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
-
-                const scaleDiff = newScale / ctx.startScale;
-                let focalDeltaX = event.focalX - ctx.focalX;
-                let focalDeltaY = event.focalY - ctx.focalY;
+            let newScale = ctx.startScale * event.scale;
 
 
 
-                console.log(1111113,"  event.focalY:",event.focalY)
+            newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
+            let scaleDiff = newScale / ctx.startScale;
 
-                if(pre_numberofpointer.value!= event.numberOfPointers )
-                {
+            if (event.numberOfPointers >= 2 &&
+                (Math.abs(scale.value - newScale) <= 0.01) &&
+                ((Math.abs(scaleDiff*(pre_eventFocalX.value - event.focalX)) > screenWidth/20)  ||
+                (Math.abs(scaleDiff*(pre_eventFocalY.value - event.focalY)) > screenWidth /20))) {
+
+                return
+            }
+
+
+            if (pre_numberofpointer.value != event.numberOfPointers) {
                 console.log(22222222)
-                    if( event.numberOfPointers<2)
-                    {
-                console.log(22222223)
-                        focalX.value = pre_focalDeltaX.value - focalDeltaX
-                        focalY.value = pre_focalDeltaY.value - focalDeltaY
-                    }
-                    else
-                    {
-                console.log(22222224)
-                        focalX.value =0
-                        focalY.value =0
-                        //focalDeltaX = event.focalX - ctx.focalX;
-                        //focalDeltaY = event.focalY - ctx.focalY;
-                    } 
+                if (event.numberOfPointers < 2) {
+                    console.log(22222223)
+                    console.log(22222223)
+                    x_basi.value = pre_eventFocalX.value - event.focalX
+                    y_basi.value = pre_eventFocalY.value - event.focalY 
+
+
                 }
+                else {
+                    console.log(22222224)
+                    x_basi.value = 0
+                    y_basi.value = 0
 
-                // 正确的补偿公式
-                offsetX.value =focalX.value + ctx.startOffsetX + focalDeltaX + (scaleDiff - 1) * ((actualWidth / 2) - ctx.focalX + ctx.startOffsetX);
-                offsetY.value =focalY.value + ctx.startOffsetY + focalDeltaY + (scaleDiff - 1) * ((actualHeight / 2) - ctx.focalY + ctx.startOffsetY);
+                    ctx.startScale = scale.value;
+                    ctx.startOffsetX = offsetX.value;
+                    ctx.startOffsetY = offsetY.value;
+                    ctx.focalX = event.focalX;
+                    ctx.focalY = event.focalY;
 
-                pre_numberofpointer.value = event.numberOfPointers
-                pre_focalDeltaX.value = focalDeltaX
-                pre_focalDeltaY.value = focalDeltaY
-                pre_eventFocalX.value = event.focalX
-                pre_eventFocalY.value = event.focalY
+                    focalDeltaX = event.focalX - ctx.focalX;
+                    focalDeltaY = event.focalY - ctx.focalY;
 
-                scale.value = newScale;
+                    newScale = ctx.startScale * event.scale;
+                    newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
+                    scaleDiff = newScale / ctx.startScale;
+
+                    offsetX.value = x_basi.value + ctx.startOffsetX + focalDeltaX + (scaleDiff - 1) * ((actualWidth / 2) - ctx.focalX + ctx.startOffsetX) ;
+                    offsetY.value = y_basi.value + ctx.startOffsetY + focalDeltaY + (scaleDiff - 1) * ((actualHeight / 2) - ctx.focalY + ctx.startOffsetY) ;
+
+                    scale.value = newScale;
+
+                    pre_focalDeltaX.value = focalDeltaX
+                    pre_focalDeltaY.value = focalDeltaY
+                    pre_eventFocalX.value = event.focalX
+                    pre_eventFocalY.value = event.focalY
+
+
+
+                }
             }
-            else {
-
-                console.log(1111114)
-            }
 
 
-            xyHand.value = 0
+            console.log(1111113)
+
+
+            offsetX.value =  x_basi.value + ctx.startOffsetX + focalDeltaX + (scaleDiff - 1) * ((actualWidth / 2) - ctx.focalX + ctx.startOffsetX) ;
+            offsetY.value =  y_basi.value + ctx.startOffsetY + focalDeltaY + (scaleDiff - 1) * ((actualHeight / 2) - ctx.focalY + ctx.startOffsetY) ;
+
+
+            pre_numberofpointer.value = event.numberOfPointers
+            pre_focalDeltaX.value = focalDeltaX
+            pre_focalDeltaY.value = focalDeltaY
+            pre_eventFocalX.value = event.focalX
+            pre_eventFocalY.value = event.focalY
+
+            scale.value = newScale;
+
+
+            xyHand.value = -1
 
         },
     })
@@ -150,19 +180,22 @@ export default function Minesweeper(): React.JSX.Element {
             ctx.translationX0 = event.translationX
             ctx.translationY0 = event.translationY
             xyHand.value = 1
+
         },
         onActive: (event, ctx: any) => {
             console.log(1111116)
 
-            if (xyHand.value == 1) {
-                console.log(1111117)
-                offsetX.value = ctx.startX + event.translationX - ctx.translationX0;
-                offsetY.value = ctx.startY + event.translationY - ctx.translationY0;
+            if (xyHand.value == 1 ) {
+              console.log(1111117)
+              offsetX.value = ctx.startX + event.translationX - ctx.translationX0 
+              offsetY.value = ctx.startY + event.translationY - ctx.translationY0 
+              //offsetX.value = ctx.startX + event.translationX - ctx.translationX0 + focalX.value;
+              //offsetY.value = ctx.startY + event.translationY - ctx.translationY0 + focalY.value;
+
             }
             else {
                 console.log(1111118)
             }
-            xyHand.value = 1
 
         },
     });
@@ -315,9 +348,10 @@ export default function Minesweeper(): React.JSX.Element {
                             }
                         }
                     >
-                        <PinchGestureHandler onGestureEvent={pinchHandler} ref={pinchRef}  >
+
+                        <PinchGestureHandler onGestureEvent={pinchHandler} ref={pinchRef}  simultaneousHandlers={panRef}  enabled={pinchEnabled} >
                             <Animated.View >
-                                <PanGestureHandler onGestureEvent={panHandler} ref={panRef} simultaneousHandlers={pinchRef} >
+                                <PanGestureHandler onGestureEvent={panHandler} ref={panRef} simultaneousHandlers={pinchRef} enabled={panEnabled}  >
                                     <Animated.View style={[animatedStyle, { width: actualWidth, height: actualHeight, borderWidth: 3, borderColor: "lightgray" }]}>
                                         <FlatList
                                             data={mines}
