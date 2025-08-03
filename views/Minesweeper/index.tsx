@@ -226,6 +226,16 @@ export default function Minesweeper(): React.JSX.Element {
     const RenderItem = React.memo(({ item, index }: { item: typeof mines[0], index: number }) => {
 
         const [vv,setVv] = binding(item, "visual_value");
+        const [pressed,setPressed] = binding(item, "isPressed");
+        useEffect(() => {
+            if (pressed) {
+                const timer = setTimeout(() => {
+                    setPressed(false);
+                }, 100);
+
+                return () => clearTimeout(timer); // 清理旧的定时器
+            }
+        }, [pressed]);
         return (
             <TouchableWithoutFeedback onPress={() => {
                 ViewModelA.open(index)
@@ -235,6 +245,8 @@ export default function Minesweeper(): React.JSX.Element {
                         backgroundColor: (() => {
                             if (vv == 10)
                                 return "red";
+                            else if(pressed)
+                                return "#f0f0f0";
                             else if (vv != -1)
                                 return "transparent"
                             return "#e0e0e0";

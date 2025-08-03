@@ -8,6 +8,7 @@
 #include <random>
 #include <signal.h>
 #include <string>
+#include <thread>
 
 #include "NativeViewModelA.h"
 #include "prism/container.hpp"
@@ -142,11 +143,6 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
                 {
                     ++userFlagsCount;
                 }
-                else if (cell->instance()->visual_value == -1) //未打开的格子下沉
-                {
-                    cell->instance()->isPressed = true;
-                    cell->notifyUi(rt, "isPressed");
-                }
             }
             if (visual_v == userFlagsCount)
             {
@@ -169,22 +165,24 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
                     }
                 }
             }
-            //取消下沉效果
-            for (int i = 0; i < rows * cols; ++i)
+            else // 如果周围雷数不等于数字,则把其他格子全下沉
             {
-                int r = i / cols;
-                int c = i % cols;
-
-                if (r < row - 1 || r > row + 1 || c < col - 1 || c > col + 1)
-                    continue;
-
-                std::shared_ptr<prism::rn::PrismModelProxy<Mine>> cell = this->minesVm->instance()->mines->list()->at(i);
-
-                if (cell->instance()->visual_value == -1)
+                for (int i = 0; i < rows * cols; ++i)
                 {
-                    cell->instance()->isPressed = true; // 双击旗时,未打开的格子凹下
-                    cell->notifyUi(rt, "isPressed");
+                    int r = i / cols;
+                    int c = i % cols;
+
+                    if (r < row - 1 || r > row + 1 || c < col - 1 || c > col + 1)
+                        continue;
+
+                    std::shared_ptr<prism::rn::PrismModelProxy<Mine>> cell = this->minesVm->instance()->mines->list()->at(i);
+                    if (cell->instance()->visual_value == -1) //未打开的格子下沉
+                    {
+                        cell->instance()->isPressed = true;
+                        cell->notifyUi(rt, "isPressed");
+                    }
                 }
+
             }
         }
     }
@@ -294,6 +292,8 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
 void NativeViewModelA::regen(jsi::Runtime &rt)
 {
     private_regen();
+    this->minesVm->instance()->mode = 0;  // 重置为非旗模式
+    this->minesVm->notifyUi(&rt, "mode"); // 通知UI更新模式
 }
 void NativeViewModelA::private_regen()
 {
