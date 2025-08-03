@@ -1,8 +1,9 @@
 import ViewModelA from '../../specs/NativeViewModelA';
-import { EventSubscription } from 'react-native';
+import { EventSubscription, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer, Fragment, useMemo } from 'react';
 import { Button, color } from '@rneui/base';
+import {  Icon } from '@rneui/themed';
   
 import {LayoutChangeEvent,TouchableWithoutFeedback, FlatList, Text, View, StyleSheet, Dimensions, Alert } from 'react-native';
 import Animated, {
@@ -13,7 +14,25 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {GestureHandlerRootView, Gesture, GestureDetector, PanGestureHandler, PinchGestureHandler, TextInput } from 'react-native-gesture-handler';
+import React from 'react';
 
+function binding<T>(
+    item: { [key: string]: any; register: (key: string, cb: (v: T) => void) => string; unregister: (id: any) => string },
+    key: string
+): [T,Function] {
+    const [value, setValue] = useState(item[key]);
+
+    useEffect(() => {
+        const id = item.register(key, setValue);
+        //console.log("binding id:",id)
+        return () => {
+            item.unregister(id);
+            //console.log("unbinding id:", id)
+        }
+    }, []);
+
+    return [value,setValue];
+}
 
 const vm = ViewModelA.getMinesVm()
 const mines = vm.mines.list;
@@ -35,6 +54,9 @@ const MAX_SCALE = 8;
 
 export default function Minesweeper(): React.JSX.Element {
 
+
+    const vm2 = ViewModelA.getMinesVm()
+
     if (actualHeight > actualWidth) {
         MIN_SCALE = screenHeight / actualHeight;
     }
@@ -54,8 +76,6 @@ export default function Minesweeper(): React.JSX.Element {
     const y_basi = useSharedValue(0);
     const xyHand = useSharedValue(0)
 
-    const pre_focalDeltaX = useSharedValue(0);
-    const pre_focalDeltaY = useSharedValue(0);
     const pre_eventFocalX = useSharedValue(0);
     const pre_eventFocalY = useSharedValue(0);
 
@@ -76,90 +96,51 @@ export default function Minesweeper(): React.JSX.Element {
 
     const pinchHandler = useAnimatedGestureHandler<any>({
         onStart: (event, ctx: any) => {
-            console.log(1111111)
             ctx.startScale = scale.value;
             ctx.startOffsetX = offsetX.value;
             ctx.startOffsetY = offsetY.value;
             ctx.focalX = event.focalX;
             ctx.focalY = event.focalY;
+            pre_eventFocalX.value = event.focalX
+            pre_eventFocalY.value = event.focalY
+            x_basi.value = 0
+            y_basi.value = 0
             xyHand.value = -1
         },
         onActive: (event, ctx: any) => {
-            console.log(1111112)
 
             let focalDeltaX = event.focalX - ctx.focalX;
             let focalDeltaY = event.focalY - ctx.focalY;
 
             let newScale = ctx.startScale * event.scale;
-
-
-
             newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
             let scaleDiff = newScale / ctx.startScale;
 
-            if (event.numberOfPointers >= 2 &&
-                (Math.abs(scale.value - newScale) <= 0.01) &&
-                ((Math.abs(scaleDiff*(pre_eventFocalX.value - event.focalX)) > screenWidth/20)  ||
-                (Math.abs(scaleDiff*(pre_eventFocalY.value - event.focalY)) > screenWidth /20))) {
-
-                return
-            }
-
-
+            let factor = 1.0
             if (pre_numberofpointer.value != event.numberOfPointers) {
-                console.log(22222222)
+                x_basi.value += pre_eventFocalX.value - event.focalX
+                y_basi.value += pre_eventFocalY.value - event.focalY
+
+
                 if (event.numberOfPointers < 2) {
-                    console.log(22222223)
-                    console.log(22222223)
-                    x_basi.value = pre_eventFocalX.value - event.focalX
-                    y_basi.value = pre_eventFocalY.value - event.focalY 
-
-
+                    factor = scaleDiff 
                 }
                 else {
-                    console.log(22222224)
-                    x_basi.value = 0
-                    y_basi.value = 0
-
-                    ctx.startScale = scale.value;
-                    ctx.startOffsetX = offsetX.value;
-                    ctx.startOffsetY = offsetY.value;
-                    ctx.focalX = event.focalX;
-                    ctx.focalY = event.focalY;
-
-                    focalDeltaX = event.focalX - ctx.focalX;
-                    focalDeltaY = event.focalY - ctx.focalY;
-
-                    newScale = ctx.startScale * event.scale;
-                    newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
-                    scaleDiff = newScale / ctx.startScale;
-
-                    offsetX.value = x_basi.value + ctx.startOffsetX + focalDeltaX + (scaleDiff - 1) * ((actualWidth / 2) - ctx.focalX + ctx.startOffsetX) ;
-                    offsetY.value = y_basi.value + ctx.startOffsetY + focalDeltaY + (scaleDiff - 1) * ((actualHeight / 2) - ctx.focalY + ctx.startOffsetY) ;
-
-                    scale.value = newScale;
-
-                    pre_focalDeltaX.value = focalDeltaX
-                    pre_focalDeltaY.value = focalDeltaY
-                    pre_eventFocalX.value = event.focalX
-                    pre_eventFocalY.value = event.focalY
-
-
-
+                    factor = scaleDiff 
                 }
             }
 
 
-            console.log(1111113)
 
 
-            offsetX.value =  x_basi.value + ctx.startOffsetX + focalDeltaX + (scaleDiff - 1) * ((actualWidth / 2) - ctx.focalX + ctx.startOffsetX) ;
-            offsetY.value =  y_basi.value + ctx.startOffsetY + focalDeltaY + (scaleDiff - 1) * ((actualHeight / 2) - ctx.focalY + ctx.startOffsetY) ;
+ 
+
+
+            offsetX.value =  ctx.startOffsetX + factor*(focalDeltaX +x_basi.value) + (scaleDiff - 1) * ((actualWidth / 2) - ctx.focalX  + ctx.startOffsetX)  
+            offsetY.value =  ctx.startOffsetY + factor*(focalDeltaY +y_basi.value) + (scaleDiff - 1) * ((actualHeight / 2) - ctx.focalY + ctx.startOffsetY) 
 
 
             pre_numberofpointer.value = event.numberOfPointers
-            pre_focalDeltaX.value = focalDeltaX
-            pre_focalDeltaY.value = focalDeltaY
             pre_eventFocalX.value = event.focalX
             pre_eventFocalY.value = event.focalY
 
@@ -174,7 +155,6 @@ export default function Minesweeper(): React.JSX.Element {
 
     const panHandler = useAnimatedGestureHandler({
         onStart: (event, ctx: any) => {
-            console.log(1111115)
             ctx.startX = offsetX.value;
             ctx.startY = offsetY.value;
             ctx.translationX0 = event.translationX
@@ -182,11 +162,20 @@ export default function Minesweeper(): React.JSX.Element {
             xyHand.value = 1
 
         },
+        onEnd(eventPayload, context, isCanceledOrFailed) {
+        },
+        onCancel(eventPayload, context, isCanceledOrFailed) {
+            
+        },
+        onFinish(eventPayload, context, isCanceledOrFailed) {
+            
+        },
+        onFail(eventPayload, context, isCanceledOrFailed) {
+            
+        },
         onActive: (event, ctx: any) => {
-            console.log(1111116)
 
             if (xyHand.value == 1 ) {
-              console.log(1111117)
               offsetX.value = ctx.startX + event.translationX - ctx.translationX0 
               offsetY.value = ctx.startY + event.translationY - ctx.translationY0 
               //offsetX.value = ctx.startX + event.translationX - ctx.translationX0 + focalX.value;
@@ -194,7 +183,6 @@ export default function Minesweeper(): React.JSX.Element {
 
             }
             else {
-                console.log(1111118)
             }
 
         },
@@ -210,23 +198,44 @@ export default function Minesweeper(): React.JSX.Element {
         };
     });
 
+    const FloatButton = React.memo(()=>
+    {
+        const [vv,setMode] = binding(vm,"mode")
 
-    const RenderItem = ({ item, index }: { item: typeof mines[0], index: number }) => {
+        
+        return (
+            <TouchableOpacity onPress={()=>{
+
+                vm.mode ^= 1
+            }} style={{ position: 'absolute', left: 0, bottom: 0, width: 100, height: 100, padding: 8 }} >
+                <Icon
+                    type='font-awesome'
+                    name='flag'
+                    size={40}
+                    color={vm.mode? "red":"lightgray"} >
+                    </Icon>
+            </TouchableOpacity>
+        );
+    }) 
 
 
-        const [_, forceupdate] = useState(item);
-        item.notifyUI = forceupdate;
+    const renderitem = useCallback(
+        ({ item, index }: { item: typeof mines[0]; index: number }) => <RenderItem item={item} index={index} />,
+        []
+    )
+    const RenderItem = React.memo(({ item, index }: { item: typeof mines[0], index: number }) => {
+
+        const [vv,setVv] = binding(item, "visual_value");
         return (
             <TouchableWithoutFeedback onPress={() => {
-                console.log('点击了' + index)
                 ViewModelA.open(index)
             }}>
                 <View style={[{ width: cellSize, height: cellSize }, styles.item]}>
                     <View style={[{
                         backgroundColor: (() => {
-                            if (item.visual_value == 10)
+                            if (vv == 10)
                                 return "red";
-                            else if (item.visual_value != -1)
+                            else if (vv != -1)
                                 return "transparent"
                             return "#e0e0e0";
                         })(),
@@ -241,21 +250,21 @@ export default function Minesweeper(): React.JSX.Element {
                         <Text
                             style={[styles.text, {
                                 color: (() => {
-                                    if (item.visual_value === 1)
+                                    if (vv === 1)
                                         return "#0100fe"
-                                    else if (item.visual_value === 2)
+                                    else if (vv === 2)
                                         return "#017f01"
-                                    else if (item.visual_value === 3)
+                                    else if (vv === 3)
                                         return "#fe0000"
-                                    else if (item.visual_value === 4)
+                                    else if (vv === 4)
                                         return "#010080"
-                                    else if (item.visual_value === 5)
+                                    else if (vv === 5)
                                         return "#810102"
-                                    else if (item.visual_value === 6)
+                                    else if (vv === 6)
                                         return "#008081"
-                                    else if (item.visual_value === 7)
+                                    else if (vv === 7)
                                         return "#000000"
-                                    else if (item.visual_value === 8)
+                                    else if (vv === 8)
                                         return "#808080"
                                     else
                                         return "black"
@@ -267,11 +276,11 @@ export default function Minesweeper(): React.JSX.Element {
 
                         >
                             {
-                                item.visual_value === 9 || item.visual_value === 10 ? "💣"
-                                    : item.visual_value === -1 || item.visual_value === 0 ? ""
-                                        : item.visual_value === 11 ? "🚩"
-                                            : item.visual_value === 12 ? "❓"
-                                                : item.visual_value?.toString()
+                                vv === 9 || vv === 10 ? "💣"
+                                    : vv === -1 || vv === 0 ? ""
+                                        : vv === 11 ? "🚩"
+                                            : vv === 12 ? "❓"
+                                                : vv?.toString()
                             }
                         </Text>
 
@@ -293,14 +302,15 @@ export default function Minesweeper(): React.JSX.Element {
                 </View>
             </TouchableWithoutFeedback>
         );
-    };
+    }) ;
+
 
     return (
-        <View style={{ flex: 1 }}>
-            {/* 顶部 safe area 区域背景色 */}
-            <View style={{ height: insets.top - 12, width: screenWidth, backgroundColor: (() => styles.noneClinetArea.color)() }} />
+            <View style={{ flex: 1 }}>
+                {/* 顶部 safe area 区域背景色 */}
+                <View style={{ height: insets.top - 12, width: screenWidth, backgroundColor: (() => styles.noneClinetArea.color)() }} />
 
-            {/* 主内容区域 */}
+                {/* 主内容区域 */}
             <View style={{ flex: 1, backgroundColor: 'white' }}>
                 <View style={{
                     position: 'absolute',
@@ -349,7 +359,7 @@ export default function Minesweeper(): React.JSX.Element {
                         }
                     >
 
-                        <PinchGestureHandler onGestureEvent={pinchHandler} ref={pinchRef}  simultaneousHandlers={panRef}  enabled={pinchEnabled} >
+                        <PinchGestureHandler onGestureEvent={pinchHandler} ref={pinchRef} simultaneousHandlers={panRef} enabled={pinchEnabled} >
                             <Animated.View >
                                 <PanGestureHandler onGestureEvent={panHandler} ref={panRef} simultaneousHandlers={pinchRef} enabled={panEnabled}  >
                                     <Animated.View style={[animatedStyle, { width: actualWidth, height: actualHeight, borderWidth: 3, borderColor: "lightgray" }]}>
@@ -358,7 +368,7 @@ export default function Minesweeper(): React.JSX.Element {
                                             bounces={false}
                                             overScrollMode="never"
                                             contentContainerStyle={[styles.flatlist]}
-                                            renderItem={({ item, index }) => <RenderItem item={item} index={index} />}
+                                            renderItem= {renderitem}
                                             numColumns={numColumns}
                                             initialNumToRender={mines.length}
                                             keyExtractor={(item) => item.uuid}
@@ -372,9 +382,12 @@ export default function Minesweeper(): React.JSX.Element {
                 </View>
             </View>
 
-            {/* 底部 safe area 区域背景色 */}
-            {/* <View style={{ height: insets.bottom, backgroundColor: (()=> styles.noneClinetArea.color)() }} /> */}
-        </View>
+                {/* 底部 safe area 区域背景色 */}
+                {/* <View style={{ height: insets.bottom, backgroundColor: (()=> styles.noneClinetArea.color)() }} /> */}
+            <FloatButton />
+                
+            </View>
+            
 
 
 

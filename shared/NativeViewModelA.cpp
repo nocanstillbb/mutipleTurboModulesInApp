@@ -99,6 +99,7 @@ void NativeViewModelA::open(jsi::Runtime &rt, int index)
 
 void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
 {
+    bool isFinished = false;
     int rows = this->minesVm->instance()->row_num;
     int cols = this->minesVm->instance()->col_num;
 
@@ -106,40 +107,141 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
     int col = index % cols;
 
     int v = m_minesMat(row, col);
+    int visual_v = m_visualMat(row, col);
 
-    if (m_isFirst)
+    if (this->minesVm->instance()->mode == 1) // flag mode
     {
-        while (v != 0)
+        if (visual_v == -1) // 11: flag  12:question
         {
-            private_regen();
-            v = m_minesMat(row, col);
+            m_visualMat(row, col) = 11;
         }
-        m_isFirst = false;
-    }
+        else if (visual_v == 11)
+        {
+            m_visualMat(row, col) = 12; // 变成问号
+        }
+        else if (visual_v == 12)
+        {
+            m_visualMat(row, col) = -1; // 变成未打开
+        }
+        else if (visual_v >= 1 && visual_v <= 8)
+        {
+            // 如果是数字,则核算是否周围已标雷数是否等于数字,如果是则把其他格子全打开
+            // Eigen::MatrixXf result = conv3x3((m_visualMat.array() == 11).cast<float>(), m_kernel);
+            int userFlagsCount = 0;
+            for (int i = 0; i < rows * cols; ++i)
+            {
+                int r = i / cols;
+                int c = i % cols;
 
-    if (v == 9) //开到雷,把所有格子打开,把当前格子设置为10(红色的雷)
-    {
-        m_visualMat = m_minesMat;
-        m_visualMat(row, col) = 10;
-    }
-    else if (v == 0)
-    {
-        recurse_open(index);
+                if (r < row - 1 || r > row + 1 || c < col - 1 || c > col + 1)
+                    continue;
+
+                std::shared_ptr<prism::rn::PrismModelProxy<Mine>> cell = this->minesVm->instance()->mines->list()->at(i);
+                //统计旗个数
+                if (cell->instance()->visual_value == 11) // 11: flag
+                {
+                    ++userFlagsCount;
+                }
+                else if (cell->instance()->visual_value == -1) //未打开的格子下沉
+                {
+                    cell->instance()->isPressed = true;
+                    cell->notifyUi(rt, "isPressed");
+                }
+            }
+            if (visual_v == userFlagsCount)
+            {
+                // 如果周围雷数等于数字,则把其他格子全打开
+                for (int i = 0; i < rows * cols; ++i)
+                {
+                    int r = i / cols;
+                    int c = i % cols;
+
+                    if (r < row - 1 || r > row + 1 || c < col - 1 || c > col + 1)
+                        continue;
+
+                    std::shared_ptr<prism::rn::PrismModelProxy<Mine>> cell = this->minesVm->instance()->mines->list()->at(i);
+
+                    if (cell->instance()->visual_value == -1) // -1:未打开, 9:雷
+                    {
+                        this->minesVm->instance()->mode ^= 1;
+                        private_open(i, rt);
+                        this->minesVm->instance()->mode ^= 1;
+                    }
+                }
+            }
+            //取消下沉效果
+            for (int i = 0; i < rows * cols; ++i)
+            {
+                int r = i / cols;
+                int c = i % cols;
+
+                if (r < row - 1 || r > row + 1 || c < col - 1 || c > col + 1)
+                    continue;
+
+                std::shared_ptr<prism::rn::PrismModelProxy<Mine>> cell = this->minesVm->instance()->mines->list()->at(i);
+
+                if (cell->instance()->visual_value == -1)
+                {
+                    cell->instance()->isPressed = true; // 双击旗时,未打开的格子凹下
+                    cell->notifyUi(rt, "isPressed");
+                }
+            }
+        }
     }
     else
+    // if(this->minesVm->instance()->mode == 0 ) // nf mode
     {
-        m_visualMat(row, col) = m_minesMat(row, col);
-    }
+        // 如果是非旗模式,且格子已经打开,则不处理
+        if (visual_v != -1)
+            return;
 
-    bool isFinished = false;
+        if (m_isFirst)
+        {
+            while (v != 0)
+            {
+                private_regen();
+                v = m_minesMat(row, col);
+            }
+            m_isFirst = false;
+        }
 
-    int unopened = ((m_visualMat.array().cast<int>() == -1).cast<int>()).sum();
+        if (v == 9) //开到雷,把所有格子打开,把当前格子设置为10(红色的雷)
+        {
 
-    int mines = ((m_minesMat.array().cast<int>() == 9).cast<int>()).sum();
+            for (int row = 0; row < rows; ++row)
+            {
+                for (int col = 0; col < cols; ++col)
+                {
+                    {
 
-    if (unopened == mines)
-    {
-        isFinished = true;
+                        int vv = m_visualMat(row, col);
+                        // int v = m_minesMat(row, col);
+                        if (vv != 11)
+                        {
+                            m_visualMat(row, col) = m_minesMat(row, col);
+                        }
+                    }
+                }
+            }
+            m_visualMat(row, col) = 10;
+        }
+        else if (v == 0)
+        {
+            recurse_open(index);
+        }
+        else
+        {
+            m_visualMat(row, col) = m_minesMat(row, col);
+        }
+
+        int unopened = ((m_visualMat.array().cast<int>() == -1).cast<int>()).sum();
+
+        int mines = ((m_minesMat.array().cast<int>() == 9).cast<int>()).sum();
+
+        if (unopened == mines)
+        {
+            isFinished = true;
+        }
     }
 
     for (int row = 0; row < rows; ++row)
@@ -152,7 +254,7 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
             {
                 cell->instance()->visual_value = v;
                 // emitOnValueChanged(row * cols + col);
-                cell->notifyUi(rt);
+                cell->notifyUi(rt, "visual_value");
             }
         }
     }
@@ -165,9 +267,10 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
                 std::shared_ptr<prism::rn::PrismModelProxy<Mine>> cell = this->minesVm->instance()->mines->list()->at(row * cols + col);
                 if (cell->instance()->value == 9)
                 {
+                    m_visualMat(row, col) = 11;
                     cell->instance()->visual_value = 11;
                     // emitOnValueChanged(row * cols + col);
-                    cell->notifyUi(rt);
+                    cell->notifyUi(rt, "visual_value");
                 }
             }
         }
@@ -252,7 +355,7 @@ void NativeViewModelA::private_regen()
         }
         // emitOnValueChanged(i);
         if (this->rt_)
-            cell->notifyUi(rt_);
+            cell->notifyUi(rt_, "visual_value");
     }
 }
 
@@ -279,12 +382,12 @@ void NativeViewModelA::recurse_open(int i)
     {
         std::shared_ptr<prism::rn::PrismModelProxy<Mine>> cell = minesVm->instance()->mines->list()->at(j);
         int v = m_visualMat(j / cols, j % cols);
-        if (cell->instance()->visual_value != v)
+        if (cell->instance()->value != 9 && cell->instance()->visual_value != v)
         {
             cell->instance()->visual_value = v;
             // emitOnValueChanged(j);
             if (this->rt_)
-                cell->notifyUi(rt_);
+                cell->notifyUi(rt_, "visual_value");
             if (i != j && v == 0)
             {
                 diff.insert(j);

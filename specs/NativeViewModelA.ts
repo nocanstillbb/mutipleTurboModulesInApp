@@ -7,7 +7,6 @@ export interface Mine {
   visual_value: number;
   isPressed: boolean;
   isLastPressed: boolean;
-  notifyUI: Function;
 }
 type Mines = { uuid: string, length: number; list: Array<Mine> };
 

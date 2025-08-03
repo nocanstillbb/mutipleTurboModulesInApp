@@ -47,7 +47,11 @@ PRISM_FIELDS(Mine, value, visual_value, isPressed, isLastPressed);
 
 struct MinesVM
 {
-    int mode = 1;
+    /*
+     0: nf
+     1: flag
+     */
+    int mode = 0;
     int row_num = 16;
     int col_num = 30;
     int mine_num = 100;
