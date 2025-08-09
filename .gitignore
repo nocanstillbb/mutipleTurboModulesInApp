@@ -81,3 +81,4 @@ yarn-error.log
 #ios
 ios/.cache
 ios/compile_commands.json
+android/app/src/main/assets/

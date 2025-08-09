@@ -16,15 +16,21 @@ type MineVM = {
   row_num: number;
   col_num: number;
   mine_num: number;
-  mines: Mines
+  mines: Mines;
+  eTime_ms: number;
+  flag_num: number;
+  status: number;
+  cellPixcelSize: number;
+  difficulties: number;
 };
 
 
 export interface Spec extends TurboModule {
 
   readonly getMinesVm: () => MineVM;
-  readonly open: (i: number) => void;
+  readonly initCells: () => void;
   readonly regen: () => void;
+  readonly open: (i: number) => void;
   readonly onValueChanged: EventEmitter<number>
 }
 

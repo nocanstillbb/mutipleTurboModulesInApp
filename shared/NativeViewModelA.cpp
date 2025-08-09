@@ -1,4 +1,3 @@
-#include <chrono>
 #include <iostream>
 #include <jsi/jsi.h>
 #include <memory>
@@ -24,8 +23,16 @@ NativeViewModelA::NativeViewModelA(const std::shared_ptr<CallInvoker> jsInvoker)
     // raise(SIGSTOP); // 中断
     prism::Container::get()->register_instance(jsInvoker);
     this->jsInvoker_ = jsInvoker;
-    initCells();     //初始化
-    private_regen(); //生成雷
+    private_initCells(nullptr); //初始化
+    private_regen();            //生成雷
+
+    this->refreshETimeThread_ = std::make_unique<std::thread>([this]() { refreshETime(); });
+}
+NativeViewModelA::~NativeViewModelA()
+{
+    exitFlag = true; // 设置退出标志
+    if (refreshETimeThread_ && refreshETimeThread_->joinable())
+        refreshETimeThread_->join(); // 等待线程结束
 }
 
 jsi::Object NativeViewModelA::getMinesVm(jsi::Runtime &rt)
@@ -73,7 +80,7 @@ Eigen::MatrixXf NativeViewModelA::conv3x3(const Eigen::MatrixXf &input, const Ei
     return output;
 }
 
-void NativeViewModelA::initCells()
+void NativeViewModelA::private_initCells(jsi::Runtime *rt)
 {
 
     int rows = this->minesVm->instance()->row_num;
@@ -157,7 +164,7 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
 
                     std::shared_ptr<prism::rn::PrismModelProxy<Mine>> cell = this->minesVm->instance()->mines->list()->at(i);
 
-                    if (cell->instance()->visual_value == -1) // -1:未打开, 9:雷
+                    if (cell->instance()->visual_value == -1) // -1:未打开, 12雷
                     {
                         this->minesVm->instance()->mode ^= 1;
                         private_open(i, rt);
@@ -182,7 +189,6 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
                         cell->notifyUi(rt, "isPressed");
                     }
                 }
-
             }
         }
     }
@@ -201,6 +207,7 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
                 v = m_minesMat(row, col);
             }
             m_isFirst = false;
+            this->minesVm->instance()->status = 1; // 设置状态为 playing
         }
 
         if (v == 9) //开到雷,把所有格子打开,把当前格子设置为10(红色的雷)
@@ -222,6 +229,9 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
                 }
             }
             m_visualMat(row, col) = 10;
+            // isFinished = true;
+            this->minesVm->instance()->status = 2; // 设置状态为 finished
+            this->minesVm->notifyUi(rt, "status"); // 通知UI更新状态
         }
         else if (v == 0)
         {
@@ -233,11 +243,14 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
         }
 
         int unopened = ((m_visualMat.array().cast<int>() == -1).cast<int>()).sum();
+        int flag = ((m_visualMat.array().cast<int>() == 11).cast<int>()).sum();
 
         int mines = ((m_minesMat.array().cast<int>() == 9).cast<int>()).sum();
 
-        if (unopened == mines)
+        if (unopened + flag == mines)
         {
+            this->minesVm->instance()->status = 2; // 设置状态为 finished
+            this->minesVm->notifyUi(rt, "status"); // 通知UI更新状态
             isFinished = true;
         }
     }
@@ -274,6 +287,12 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
         }
     }
 
+    int flagsNumber = ((m_visualMat.array().cast<int>() == 11).cast<int>()).sum();
+    if (flagsNumber != this->minesVm->instance()->flag_num)
+    {
+        this->minesVm->instance()->flag_num = flagsNumber;
+        this->minesVm->notifyUi(rt_, "flag_num"); // 通知UI更新旗子数量
+    }
     // if (m_isFirst)
     //{
     //     std::stringstream ss;
@@ -289,6 +308,11 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
     // }
 }
 
+void NativeViewModelA::initCells(jsi::Runtime &rt)
+{
+    private_initCells(&rt);
+}
+
 void NativeViewModelA::regen(jsi::Runtime &rt)
 {
     private_regen();
@@ -297,6 +321,7 @@ void NativeViewModelA::regen(jsi::Runtime &rt)
 }
 void NativeViewModelA::private_regen()
 {
+
     int rows = this->minesVm->instance()->row_num;
     int cols = this->minesVm->instance()->col_num;
 
@@ -357,6 +382,18 @@ void NativeViewModelA::private_regen()
         if (this->rt_)
             cell->notifyUi(rt_, "visual_value");
     }
+
+    this->minesVm->instance()->eTime_ms = 0;
+    this->minesVm->instance()->flag_num = 0;
+    this->minesVm->instance()->status = 0;
+    if (rt_)
+    {
+        this->minesVm->notifyUi(rt_, "status");
+        this->minesVm->notifyUi(rt_, "eTime_ms");
+        this->minesVm->notifyUi(rt_, "flag_num");
+    }
+
+    start_ = std::chrono::high_resolution_clock::now();
 }
 
 void NativeViewModelA::recurse_open(int i)
@@ -397,6 +434,26 @@ void NativeViewModelA::recurse_open(int i)
     for (int item : diff)
     {
         recurse_open(item);
+    }
+}
+
+void NativeViewModelA::refreshETime()
+{
+    while (!exitFlag)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        if (this->minesVm->instance()->status == 1) // playing
+        {
+            auto now = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_);
+            this->minesVm->instance()->eTime_ms = duration.count();
+            if (this->jsInvoker_)
+            {
+                this->jsInvoker_->invokeAsync([&, this]() { this->minesVm->notifyUi(this->rt_, "eTime_ms"); });
+            }
+            else
+                this->minesVm->notifyUi(this->rt_, "eTime_ms");
+        }
     }
 }
 

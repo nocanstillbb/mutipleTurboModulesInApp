@@ -3,9 +3,9 @@ import { EventSubscription, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer, Fragment, useMemo } from 'react';
 import { Button, color } from '@rneui/base';
-import {  Icon } from '@rneui/themed';
-  
-import {LayoutChangeEvent,TouchableWithoutFeedback, FlatList, Text, View, StyleSheet, Dimensions, Alert } from 'react-native';
+import { Icon, Dialog, CheckBox, Input } from '@rneui/themed';
+
+import { LayoutChangeEvent, TouchableWithoutFeedback, FlatList, Text, View, StyleSheet, Dimensions, Alert } from 'react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -13,13 +13,13 @@ import Animated, {
     runOnJS,
 } from 'react-native-reanimated';
 
-import {GestureHandlerRootView, Gesture, GestureDetector, PanGestureHandler, PinchGestureHandler, TextInput } from 'react-native-gesture-handler';
+import { GestureHandlerRootView, Gesture, GestureDetector, PanGestureHandler, PinchGestureHandler, TextInput } from 'react-native-gesture-handler';
 import React from 'react';
 
 function binding<T>(
     item: { [key: string]: any; register: (key: string, cb: (v: T) => void) => string; unregister: (id: any) => string },
     key: string
-): [T,Function] {
+): [T, Function] {
     const [value, setValue] = useState(item[key]);
 
     useEffect(() => {
@@ -31,31 +31,28 @@ function binding<T>(
         }
     }, []);
 
-    return [value,setValue];
+    return [value, setValue];
 }
 
-const vm = ViewModelA.getMinesVm()
-const mines = vm.mines.list;
-
-const numRows = vm.row_num;
-const numColumns = vm.col_num;
-
-const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
-
-const cellSize = 40;
-const actualHeight = cellSize * numRows;
-const actualWidth = cellSize * numColumns;
-
-var MIN_SCALE = 1;
-const MAX_SCALE = 8;
 
 
 
 export default function Minesweeper(): React.JSX.Element {
+    const vm = ViewModelA.getMinesVm()
+    const mines = vm.mines.list;
 
+    const numRows = vm.row_num;
+    const numColumns = vm.col_num;
 
-    const vm2 = ViewModelA.getMinesVm()
+    const screenWidth = Dimensions.get('window').width;
+    const screenHeight = Dimensions.get('window').height;
+
+    const [cellSize, setCellSize] = binding(vm, "cellPixcelSize")
+    const actualHeight = cellSize * numRows;
+    const actualWidth = cellSize * numColumns;
+
+    var MIN_SCALE = 1;
+    const MAX_SCALE = 8;
 
     if (actualHeight > actualWidth) {
         MIN_SCALE = screenHeight / actualHeight;
@@ -90,6 +87,7 @@ export default function Minesweeper(): React.JSX.Element {
     const insets = useSafeAreaInsets();
 
 
+    const [settingDilogOpen, setSettingDilogOpen] = useState(false);
 
 
 
@@ -122,22 +120,22 @@ export default function Minesweeper(): React.JSX.Element {
                 y_basi.value += pre_eventFocalY.value - event.focalY
 
 
-                if (event.numberOfPointers < 2) {
-                    factor = scaleDiff 
-                }
-                else {
-                    factor = scaleDiff 
-                }
+                //if (event.numberOfPointers < 2) { //
+                //    factor = scaleDiff 
+                //}
+                //else {
+                //    factor = scaleDiff 
+                //}
             }
 
 
 
 
- 
 
 
-            offsetX.value =  ctx.startOffsetX + factor*(focalDeltaX +x_basi.value) + (scaleDiff - 1) * ((actualWidth / 2) - ctx.focalX  + ctx.startOffsetX)  
-            offsetY.value =  ctx.startOffsetY + factor*(focalDeltaY +y_basi.value) + (scaleDiff - 1) * ((actualHeight / 2) - ctx.focalY + ctx.startOffsetY) 
+
+            offsetX.value = ctx.startOffsetX + factor * (focalDeltaX + x_basi.value) + (scaleDiff - 1) * ((actualWidth / 2) - ctx.focalX + ctx.startOffsetX)
+            offsetY.value = ctx.startOffsetY + factor * (focalDeltaY + y_basi.value) + (scaleDiff - 1) * ((actualHeight / 2) - ctx.focalY + ctx.startOffsetY)
 
 
             pre_numberofpointer.value = event.numberOfPointers
@@ -165,21 +163,21 @@ export default function Minesweeper(): React.JSX.Element {
         onEnd(eventPayload, context, isCanceledOrFailed) {
         },
         onCancel(eventPayload, context, isCanceledOrFailed) {
-            
+
         },
         onFinish(eventPayload, context, isCanceledOrFailed) {
-            
+
         },
         onFail(eventPayload, context, isCanceledOrFailed) {
-            
+
         },
         onActive: (event, ctx: any) => {
 
-            if (xyHand.value == 1 ) {
-              offsetX.value = ctx.startX + event.translationX - ctx.translationX0 
-              offsetY.value = ctx.startY + event.translationY - ctx.translationY0 
-              //offsetX.value = ctx.startX + event.translationX - ctx.translationX0 + focalX.value;
-              //offsetY.value = ctx.startY + event.translationY - ctx.translationY0 + focalY.value;
+            if (xyHand.value == 1) {
+                offsetX.value = ctx.startX + event.translationX - ctx.translationX0
+                offsetY.value = ctx.startY + event.translationY - ctx.translationY0
+                //offsetX.value = ctx.startX + event.translationX - ctx.translationX0 + focalX.value;
+                //offsetY.value = ctx.startY + event.translationY - ctx.translationY0 + focalY.value;
 
             }
             else {
@@ -198,25 +196,133 @@ export default function Minesweeper(): React.JSX.Element {
         };
     });
 
-    const FloatButton = React.memo(()=>
-    {
-        const [vv,setMode] = binding(vm,"mode")
+    const SettingDialog = React.memo(({ isopen, setIsopen }: { isopen: boolean, setIsopen: Function }) => {
+        const [difficulties, setDifficulties] = binding(vm, "difficulties")
+        const [v, setV] = React.useState(vm.difficulties);
+        return (<Dialog
+            isVisible={isopen}
+            onBackdropPress={() => {
+                setIsopen(false)
+            }}
+        >
+            <Dialog.Title title="参数设置" />
+            {['1', '2', '3'].map((l, i) => (
+                <CheckBox
+                    key={i}
+                    title={
+                        (() => {
+                            switch (i) {
+                                case 0:
+                                    return "简单 (8x8,10雷)";
+                                case 1:
+                                    return "中等 (16x16,40雷)";
+                                case 2:
+                                    return "困难 (16x30,99雷)";
+                                case 3:
+                                    return "自定义";
+                                default:
+                                    return "";
+                            }
+                        })()
+                    }
+                    containerStyle={{ backgroundColor: 'white', borderWidth: 0 }}
+                    checkedIcon="dot-circle-o"
+                    uncheckedIcon="circle-o"
+                    checkedColor='gray'
+                    checked={v === i}
+                    onPress={() => {
+                        setV(i)
+                    }}
+                />)) }
+                {/*
+                <View style={{ flexDirection:"row"}} >
 
-        
+                <Input></Input>
+                <Input></Input>
+                </View>
+                 */}
+
+            <Dialog.Actions>
+                <Dialog.Button
+                    title="确认"
+                    titleStyle={[{ color: "gray" }]} 
+                    onPress={() => {
+                        vm.difficulties = v
+                        switch (v) {
+                            case 0:
+                                //return "简单 (8x8,10雷)";
+                                vm.row_num = 8;
+                                vm.col_num = 8;
+                                vm.mine_num = 10;
+                                break;
+                            case 1:
+                                //return "中等 (16x16,40雷)";
+                                vm.row_num = 16;
+                                vm.col_num = 16;
+                                vm.mine_num = 40;
+                                break;
+                            case 2:
+                                //return "困难 (16x30,99雷)";
+                                vm.row_num = 16;
+                                vm.col_num = 30;
+                                vm.mine_num = 99;
+                                break;
+                            case 3:
+                            //return "自定义";
+                            default:
+                            //return "";
+                        }
+                        ViewModelA.initCells()
+                        ViewModelA.regen()
+                        vm.cellPixcelSize = vm.cellPixcelSize * scale.value
+                        setTimeout(() => {
+                            offsetX.value = 0;
+                            offsetY.value = 0;
+                            scale.value = 1
+                        }, 1);
+                        setIsopen(false)
+                    }}
+                />
+                <Dialog.Button titleStyle={[{color:"gray"}]}  title="取消" onPress={() => setIsopen(false)} />
+            </Dialog.Actions>
+        </Dialog>);
+    })
+
+
+    const FloatButton = React.memo(() => {
+        const [vv, setMode] = binding(vm, "mode")
+
+
         return (
-            <TouchableOpacity onPress={()=>{
-
+            <TouchableOpacity onPress={() => {
                 vm.mode ^= 1
             }} style={{ position: 'absolute', left: 0, bottom: 0, width: 100, height: 100, padding: 8 }} >
                 <Icon
                     type='font-awesome'
                     name='flag'
                     size={40}
-                    color={vm.mode? "red":"lightgray"} >
-                    </Icon>
+                    color={vm.mode ? "red" : "gray"} >
+                </Icon>
             </TouchableOpacity>
         );
-    }) 
+    })
+    const FloatButton_right = React.memo(() => {
+        const [vv, setMode] = binding(vm, "mode")
+        return (
+            
+            <TouchableOpacity onPress={() => {
+                setSettingDilogOpen(true)
+            }} style={{ position: 'absolute', right: 0, bottom: 0, width: 100, height: 100, padding: 8 }} >
+                <Icon
+                    type='font-awesome'
+                    name='gear'
+                    size={40}
+                    color={vm.mode ? "lightgray" : "gray"} >
+                </Icon>
+            </TouchableOpacity>
+
+        );
+    })
 
 
     const renderitem = useCallback(
@@ -225,17 +331,18 @@ export default function Minesweeper(): React.JSX.Element {
     )
     const RenderItem = React.memo(({ item, index }: { item: typeof mines[0], index: number }) => {
 
-        const [vv,setVv] = binding(item, "visual_value");
-        const [pressed,setPressed] = binding(item, "isPressed");
+        const [vv, setVv] = binding(item, "visual_value");
+        const [pressed, setPressed] = binding(item, "isPressed");
         useEffect(() => {
             if (pressed) {
                 const timer = setTimeout(() => {
-                    setPressed(false);
+                    item.isPressed = false
                 }, 100);
 
                 return () => clearTimeout(timer); // 清理旧的定时器
             }
         }, [pressed]);
+        const [cellSize, setCellSize] = binding(vm, "cellPixcelSize")
         return (
             <TouchableWithoutFeedback onPress={() => {
                 ViewModelA.open(index)
@@ -245,17 +352,21 @@ export default function Minesweeper(): React.JSX.Element {
                         backgroundColor: (() => {
                             if (vv == 10)
                                 return "red";
-                            else if(pressed)
+                            else if (pressed)
                                 return "#f0f0f0";
-                            else if (vv != -1)
+                            else if (vv != -1 && vv != 9 && vv != 11 && vv != 12)
                                 return "transparent"
                             return "#e0e0e0";
                         })(),
                         position: "absolute",
-                        top: (Math.floor(index / numColumns) === 0 ? 0 : 3),
-                        left: (Math.floor(index % numColumns) === 0 ? 0 : 3),
-                        right: 0,
-                        bottom: 0,
+                        top: vm.cellPixcelSize*0.05,
+                        left: vm.cellPixcelSize*0.05,
+                        right: vm.cellPixcelSize*0.05,
+                        bottom: vm.cellPixcelSize*0.05,
+                        //top: (Math.floor(index / numColumns) !== 0 && Math.floor(index / numColumns) === 0 ? 0 : 3),
+                        //left: (Math.floor(index % numColumns) !==0 && Math.floor(index % numColumns) === 0 ? 0 : 3),
+                        //right: 0,
+                        //bottom: (Math.floor(index / numColumns) !== vm.row_num) === 0 ? 0 : 3,
                         flex: 1,
                         justifyContent: "center"
                     }]} >
@@ -314,15 +425,39 @@ export default function Minesweeper(): React.JSX.Element {
                 </View>
             </TouchableWithoutFeedback>
         );
-    }) ;
+    });
 
+
+
+    const MineNumber = React.memo(() => {
+        const [flag_num, setFlagNumber] = binding(vm, "flag_num")
+        return (
+            <View style={{ flexDirection: 'row', backgroundColor: "black" ,padding:2}}>
+                <Text style={{ color: "red", fontFamily: 'Digital-7 Mono', fontSize: 44 }}>
+                {String(vm.mine_num - flag_num).padStart(3, '0')}
+                </Text>
+            </View>
+        );
+    })
+
+    const Timecomponent = React.memo(() => {
+        const [eTime_ms, setETime] = binding(vm, "eTime_ms")
+        return (
+            <View style={{ flexDirection: 'row', backgroundColor: "black" ,padding:2}}>
+                <Text style={{ color: "red", fontFamily: 'Digital-7 Mono', fontSize: 44 }}>
+                    {String(Math.floor(eTime_ms / 1000)).padStart(3, '0')}{/** .{String(Math.floor((eTime_ms % 1000) / 10.0)).padStart(2, '0')}*/}
+                </Text>
+            </View>
+        );
+    })
 
     return (
-            <View style={{ flex: 1 }}>
-                {/* 顶部 safe area 区域背景色 */}
-                <View style={{ height: insets.top - 12, width: screenWidth, backgroundColor: (() => styles.noneClinetArea.color)() }} />
 
-                {/* 主内容区域 */}
+        <View style={{ flex: 1 }}>
+            {/* 顶部 safe area 区域背景色 */}
+            <View style={{ height: insets.top - 12, width: screenWidth, backgroundColor: (() => styles.noneClinetArea.color)() }} ></View>
+
+            {/* 主内容区域 */}
             <View style={{ flex: 1, backgroundColor: 'white' }}>
                 <View style={{
                     position: 'absolute',
@@ -334,10 +469,20 @@ export default function Minesweeper(): React.JSX.Element {
                     // height: screenHeight - insets.bottom - insets.top, 
                     overflow: 'hidden',
                 }}>
-                    <View style={[styles.insetBox, { alignItems: 'center', width: '100%', backgroundColor: (() => styles.noneClinetArea.color)() }]}>
-                        <Button
+
+
+                    <View style={[styles.insetBox, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: (() => styles.noneClinetArea.color)() }]}>
+
+                        <View style={{ flexDirection: 'row', flex: 1, flexGrow: 1 }}>
+
+                            <MineNumber />
+                                                                                                                      
+                            <View style={{ flex: 1, flexGrow: 1 }}></View>
+                        </View>
+                      <Button
                             onPress={() => {
                                 ViewModelA.regen()
+                                vm.cellPixcelSize = vm.cellPixcelSize * scale.value
                                 setTimeout(() => {
                                     offsetX.value = 0;
                                     offsetY.value = 0;
@@ -358,8 +503,16 @@ export default function Minesweeper(): React.JSX.Element {
                                 marginVertical: 0,
                             }}
                         />
+                        <View style={{ flexDirection: 'row', flex: 1, flexGrow: 1 }}>
+                            <View style={{ flex: 1, flexGrow: 1 }}></View>
+
+                            <Timecomponent />
+                                                                                                                      
+                        </View>
+                        
 
                     </View>
+
 
                     <GestureHandlerRootView
                         style={
@@ -374,13 +527,14 @@ export default function Minesweeper(): React.JSX.Element {
                         <PinchGestureHandler onGestureEvent={pinchHandler} ref={pinchRef} simultaneousHandlers={panRef} enabled={pinchEnabled} >
                             <Animated.View >
                                 <PanGestureHandler onGestureEvent={panHandler} ref={panRef} simultaneousHandlers={pinchRef} enabled={panEnabled}  >
-                                    <Animated.View style={[animatedStyle, { width: actualWidth, height: actualHeight, borderWidth: 3, borderColor: "lightgray" }]}>
+                                    <Animated.View style={[animatedStyle, { width: actualWidth + (vm.col_num - 1) * 0.2, height: actualHeight + (vm.row_num - 1) * 0.5, borderWidth: 3, borderColor: "lightgray" }]}>
                                         <FlatList
                                             data={mines}
                                             bounces={false}
                                             overScrollMode="never"
-                                            contentContainerStyle={[styles.flatlist]}
-                                            renderItem= {renderitem}
+                                            key={`${numRows}-${numColumns}`}
+                                            contentContainerStyle={[styles.flatlist, { width: actualWidth, height: actualHeight }]}
+                                            renderItem={renderitem}
                                             numColumns={numColumns}
                                             initialNumToRender={mines.length}
                                             keyExtractor={(item) => item.uuid}
@@ -394,12 +548,17 @@ export default function Minesweeper(): React.JSX.Element {
                 </View>
             </View>
 
-                {/* 底部 safe area 区域背景色 */}
-                {/* <View style={{ height: insets.bottom, backgroundColor: (()=> styles.noneClinetArea.color)() }} /> */}
+            {/* 底部 safe area 区域背景色 */}
+            {/*<View style={{ height: insets.bottom, backgroundColor: (()=> styles.noneClinetArea.color)() }} ></View> */}
             <FloatButton />
-                
-            </View>
-            
+
+            <FloatButton_right />
+
+            <SettingDialog isopen={settingDilogOpen} setIsopen={setSettingDilogOpen} />
+
+
+        </View>
+
 
 
 
@@ -420,8 +579,8 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         overflow: "hidden",
-        width: actualWidth,
-        height: actualHeight
+        //width: actualWidth,
+        //height: actualHeight
 
     },
     item: {
