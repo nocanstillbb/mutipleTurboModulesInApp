@@ -24,10 +24,8 @@ function binding<T>(
 
     useEffect(() => {
         const id = item.register(key, setValue);
-        //console.log("binding id:",id)
         return () => {
             item.unregister(id);
-            //console.log("unbinding id:", id)
         }
     }, []);
 
@@ -209,9 +207,7 @@ export default function Minesweeper(): React.JSX.Element {
                     keyboardType="numeric" // 数字键盘
                     value={String(value)}
                     onChangeText={(text) => {
-                        console.log("onChangeText:", text)
                         obj[prop] = Number(text.replace(/[^0-9]/g, ''))
-                        console.log("onChangeText:", obj[prop])
                     }}
                 />
             </View>

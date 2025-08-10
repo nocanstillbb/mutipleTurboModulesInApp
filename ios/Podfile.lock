@@ -1334,7 +1334,7 @@ PODS:
     - React-jsiexecutor
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
-  - react-native-safe-area-context (5.4.1):
+  - react-native-safe-area-context (5.6.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1349,8 +1349,8 @@ PODS:
     - React-hermes
     - React-ImageManager
     - React-jsi
-    - react-native-safe-area-context/common (= 5.4.1)
-    - react-native-safe-area-context/fabric (= 5.4.1)
+    - react-native-safe-area-context/common (= 5.6.0)
+    - react-native-safe-area-context/fabric (= 5.6.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -1360,7 +1360,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context/common (5.4.1):
+  - react-native-safe-area-context/common (5.6.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1384,7 +1384,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context/fabric (5.4.1):
+  - react-native-safe-area-context/fabric (5.6.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1731,7 +1731,7 @@ PODS:
     - React-logger (= 0.79.2)
     - React-perflogger (= 0.79.2)
     - React-utils (= 0.79.2)
-  - RNGestureHandler (2.25.0):
+  - RNGestureHandler (2.28.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1879,7 +1879,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNVectorIcons (10.2.0):
+  - RNVectorIcons (10.3.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2186,7 +2186,7 @@ SPEC CHECKSUMS:
   React-logger: 8edfcedc100544791cd82692ca5a574240a16219
   React-Mapbuffer: c3f4b608e4a59dd2f6a416ef4d47a14400194468
   React-microtasksnativemodule: 054f34e9b82f02bd40f09cebd4083828b5b2beb6
-  react-native-safe-area-context: 5594ec631ede9c311c5c0efa244228eff845ce88
+  react-native-safe-area-context: f0f631086ac8e569b5cd7911e4403cd96cd31915
   React-NativeModulesApple: 2c4377e139522c3d73f5df582e4f051a838ff25e
   React-oscompat: ef5df1c734f19b8003e149317d041b8ce1f7d29c
   React-perflogger: 9a151e0b4c933c9205fd648c246506a83f31395d
@@ -2218,9 +2218,9 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 04d5eb15eb46be6720e17a4a7fa92940a776e584
   ReactCodegen: fbf8c1add7d44225df1505bb7b2bfb54bd908a1f
   ReactCommon: 76d2dc87136d0a667678668b86f0fca0c16fdeb0
-  RNGestureHandler: ebef699ea17e7c0006c1074e1e423ead60ce0121
+  RNGestureHandler: 0397fea67f39d5a2d17fcf4a028e206f7ba098ba
   RNReanimated: 722d67dfde539bfe29b572878f4bc805f727726b
-  RNVectorIcons: 941a39b5d3b9d8cf8ac2e2fc09b07bfafbcf9796
+  RNVectorIcons: 1fe59cfa2d3ac94ceb9d373a59c54609471b8d56
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: c758bfb934100bb4bf9cbaccb52557cee35e8bdf
 
