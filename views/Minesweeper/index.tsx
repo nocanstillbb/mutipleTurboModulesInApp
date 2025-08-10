@@ -362,7 +362,7 @@ export default function Minesweeper(): React.JSX.Element {
                     type='font-awesome'
                     name='gear'
                     size={40}
-                    color={vm.mode ? "lightgray" : "gray"} >
+                    color="gray" >
                 </Icon>
             </TouchableOpacity>
 

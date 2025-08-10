@@ -11,7 +11,8 @@ include(../../../../../third-party/prism_rn/prism_rn.cmake)
 
 # fmt
 add_library(fmt STATIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../ios/Pods/fmt/src/format.cc)
-target_include_directories(fmt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../ios/Pods//fmt/include)
+target_include_directories(fmt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../ios/Pods//fmt/include 
+${CMAKE_CURRENT_SOURCE_DIR}/../../../../../third-party/eigen3//Eigen)
 
 
 
