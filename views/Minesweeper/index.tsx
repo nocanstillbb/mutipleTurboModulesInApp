@@ -1,5 +1,5 @@
 import ViewModelA from '../../specs/NativeViewModelA';
-import { EventSubscription, TouchableOpacity } from 'react-native';
+import { EventSubscription, TouchableOpacity ,Keyboard} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useReducer, Fragment, useMemo } from 'react';
 import { Button, color } from '@rneui/base';
@@ -51,15 +51,15 @@ export default function Minesweeper(): React.JSX.Element {
     const actualHeight = cellSize * numRows;
     const actualWidth = cellSize * numColumns;
 
-    var MIN_SCALE = 1;
+    var MIN_SCALE = 0.5;
     const MAX_SCALE = 8;
 
-    if (actualHeight > actualWidth) {
-        MIN_SCALE = screenHeight / actualHeight;
-    }
-    else {
-        MIN_SCALE = screenWidth / actualWidth;
-    }
+    //if (actualHeight > actualWidth) {
+    //    MIN_SCALE = screenHeight / actualHeight;
+    //}
+    //else {
+    //    MIN_SCALE = screenWidth / actualWidth;
+    //}
 
     const [pinchEnabled, setPinchEnabled] = useState(true);
     const [panEnabled, setPanEnabled] = useState(true);
@@ -111,7 +111,7 @@ export default function Minesweeper(): React.JSX.Element {
             let focalDeltaY = event.focalY - ctx.focalY;
 
             let newScale = ctx.startScale * event.scale;
-            newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
+            //newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
             let scaleDiff = newScale / ctx.startScale;
 
             let factor = 1.0
@@ -196,17 +196,42 @@ export default function Minesweeper(): React.JSX.Element {
         };
     });
 
+    const LabelInput = React.memo(({ label, obj,prop }: { label: string, obj:any,prop: string}) => {
+        const [value, setValue] = binding(obj, prop)
+        const [tmpdiff, setTemdiff] = binding(vm, "tmp_difficulties")
+
+        return(
+            <View style={{ flexDirection: "row", height: 30, alignContent: "center", justifyContent: 'center' }} >
+                <Text style={{ color:(()=>{ return tmpdiff!=3 ?"lightgray":"black"})(), textAlign: 'center', padding: 8, fontSize: 16, marginRight: 5, marginLeft: 5 }}>{label}</Text>
+                <TextInput
+                readOnly={tmpdiff != 3 }
+                    style={[{color:(()=>{ return tmpdiff!=3 ?"lightgray":"black"})(), flex: 1, marginRight: 80, borderWidth: 1, borderColor: '#ccc', padding: 8, borderRadius: 4, fontSize: 16 }]}
+                    keyboardType="numeric" // 数字键盘
+                    value={String(value)}
+                    onChangeText={(text) => {
+                        console.log("onChangeText:", text)
+                        obj[prop] = Number(text.replace(/[^0-9]/g, ''))
+                        console.log("onChangeText:", obj[prop])
+                    }}
+                />
+            </View>
+        )
+    })
+
     const SettingDialog = React.memo(({ isopen, setIsopen }: { isopen: boolean, setIsopen: Function }) => {
-        const [difficulties, setDifficulties] = binding(vm, "difficulties")
-        const [v, setV] = React.useState(vm.difficulties);
+        const [tmpdiff, setTmpDifficulties] = binding(vm, "tmp_difficulties")
         return (<Dialog
             isVisible={isopen}
+            onShow={() => {
+                setTmpDifficulties(vm.difficulties)
+            }}
             onBackdropPress={() => {
-                setIsopen(false)
+                //setIsopen(false)
+                Keyboard.dismiss();
             }}
         >
             <Dialog.Title title="参数设置" />
-            {['1', '2', '3'].map((l, i) => (
+            {['1', '2', '3','4'].map((l, i) => (
                 <CheckBox
                     key={i}
                     title={
@@ -229,26 +254,9 @@ export default function Minesweeper(): React.JSX.Element {
                     checkedIcon="dot-circle-o"
                     uncheckedIcon="circle-o"
                     checkedColor='gray'
-                    checked={v === i}
+                    checked={tmpdiff === i}
                     onPress={() => {
-                        setV(i)
-                    }}
-                />)) }
-                {/*
-                <View style={{ flexDirection:"row"}} >
-
-                <Input></Input>
-                <Input></Input>
-                </View>
-                 */}
-
-            <Dialog.Actions>
-                <Dialog.Button
-                    title="确认"
-                    titleStyle={[{ color: "gray" }]} 
-                    onPress={() => {
-                        vm.difficulties = v
-                        switch (v) {
+                        switch (i) {
                             case 0:
                                 //return "简单 (8x8,10雷)";
                                 vm.row_num = 8;
@@ -263,12 +271,53 @@ export default function Minesweeper(): React.JSX.Element {
                                 break;
                             case 2:
                                 //return "困难 (16x30,99雷)";
-                                vm.row_num = 16;
-                                vm.col_num = 30;
-                                vm.mine_num = 99;
+                                vm.row_num = 16
+                                vm.col_num = 30
+                                vm.mine_num = 99
                                 break;
-                            case 3:
-                            //return "自定义";
+                            case 3: //自定义
+                                break;
+                            default:
+                            //return "";
+                        }
+
+                        vm.tmp_difficulties = i
+                    }}
+                />)) }
+
+            <View style={{ gap: 10 }}>
+                <LabelInput label='行数' obj={vm}  prop='row_num'  />
+                <LabelInput label='列数' obj={vm}  prop='col_num'  />
+                <LabelInput label='雷数' obj={vm}  prop='mine_num'  />
+            </View>
+
+            <Dialog.Actions>
+                <Dialog.Button
+                    title="确认"
+                    titleStyle={[{ color: "gray" }]} 
+                    onPress={() => {
+                        vm.difficulties = vm.tmp_difficulties
+                        switch (tmpdiff) {
+                            case 0:
+                                //return "简单 (8x8,10雷)";
+                                vm.row_num = 8;
+                                vm.col_num = 8;
+                                vm.mine_num = 10;
+                                break;
+                            case 1:
+                                //return "中等 (16x16,40雷)";
+                                vm.row_num = 16;
+                                vm.col_num = 16;
+                                vm.mine_num = 40;
+                                break;
+                            case 2:
+                                //return "困难 (16x30,99雷)";
+                                vm.row_num = 16
+                                vm.col_num = 30
+                                vm.mine_num = 99
+                                break;
+                            case 3: //自定义
+                                break;
                             default:
                             //return "";
                         }
@@ -359,10 +408,10 @@ export default function Minesweeper(): React.JSX.Element {
                             return "#e0e0e0";
                         })(),
                         position: "absolute",
-                        top: vm.cellPixcelSize*0.05,
-                        left: vm.cellPixcelSize*0.05,
-                        right: vm.cellPixcelSize*0.05,
-                        bottom: vm.cellPixcelSize*0.05,
+                        top: (()=>{return cellSize *0.05})(),
+                        right: (()=>{return cellSize *0.05})(),
+                        bottom: (()=>{return cellSize *0.05})(),
+                        left: (()=>{return cellSize *0.05})(),
                         //top: (Math.floor(index / numColumns) !== 0 && Math.floor(index / numColumns) === 0 ? 0 : 3),
                         //left: (Math.floor(index % numColumns) !==0 && Math.floor(index % numColumns) === 0 ? 0 : 3),
                         //right: 0,

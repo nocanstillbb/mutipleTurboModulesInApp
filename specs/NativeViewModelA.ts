@@ -22,6 +22,7 @@ type MineVM = {
   status: number;
   cellPixcelSize: number;
   difficulties: number;
+  tmp_difficulties: number;
 };
 
 
