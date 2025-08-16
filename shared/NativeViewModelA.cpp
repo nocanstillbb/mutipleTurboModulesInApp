@@ -107,7 +107,8 @@ void NativeViewModelA::open(jsi::Runtime &rt, int index)
 
 void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
 {
-    bool isFinished = false;
+    if (this->minesVm->instance()->status >= 2) // 如果不是 playing 状态,则不处理
+        return;
     int rows = this->minesVm->instance()->row_num;
     int cols = this->minesVm->instance()->col_num;
 
@@ -213,27 +214,11 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
         if (v == 9) //开到雷,把所有格子打开,把当前格子设置为10(红色的雷)
         {
 
-            for (int row = 0; row < rows; ++row)
-            {
-                for (int col = 0; col < cols; ++col)
-                {
-                    {
-
-                        int vv = m_visualMat(row, col);
-                        // int v = m_minesMat(row, col);
-                        if (vv != 11)
-                        {
-                            m_visualMat(row, col) = m_minesMat(row, col);
-                        }
-                    }
-                }
-            }
             m_visualMat(row, col) = 10;
-            // isFinished = true;
-            this->minesVm->instance()->status = 2; // 设置状态为 finished
+            this->minesVm->instance()->status = 3; // 设置状态为 finished
             this->minesVm->notifyUi(rt, "status"); // 通知UI更新状态
         }
-        else if (v == 0)
+        else if (v == 0) //破空
         {
             recurse_open(index);
         }
@@ -242,20 +227,21 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
             m_visualMat(row, col) = m_minesMat(row, col);
         }
 
-        int unopened = ((m_visualMat.array().cast<int>() == -1).cast<int>()).sum();
-        int flag = ((m_visualMat.array().cast<int>() == 11).cast<int>()).sum();
+        // int flag = ((m_visualMat.array().cast<int>() == 11).cast<int>()).sum();
 
-        int mines = ((m_minesMat.array().cast<int>() == 9).cast<int>()).sum();
+        // int mines = ((m_minesMat.array().cast<int>() == 9).cast<int>()).sum();
 
-        if (unopened + flag == mines)
-        {
-            this->minesVm->instance()->status = 2; // 设置状态为 finished
-            this->minesVm->notifyUi(rt, "status"); // 通知UI更新状态
-            isFinished = true;
-        }
+        // if (unopened <= mines && unopened + flag == mines) // 未打开的格子数 + 旗子数 == 雷数 ,表示游戏完成
+        //{
+        //     this->minesVm->instance()->status = 2; // 设置状态为 finished
+        //     this->minesVm->notifyUi(rt, "status"); // 通知UI更新状态
+        // }
     }
 
-    for (int row = 0; row < rows; ++row)
+    int confirmed_mines_count = 0;
+    int open_num = 0;
+
+    for (int row = 0; row < rows; ++row) //把所有状态更新到ui上
     {
         for (int col = 0; col < cols; ++col)
         {
@@ -267,9 +253,44 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
                 // emitOnValueChanged(row * cols + col);
                 cell->notifyUi(rt, "visual_value");
             }
+            if (cell->instance()->visual_value >= 0 && cell->instance()->visual_value <= 8 && cell->instance()->value >= 0 && cell->instance()->value <= 8)
+            {
+                ++open_num;
+            }
+
+            if (cell->instance()->value == 9 && (cell->instance()->visual_value == 11 || cell->instance()->visual_value == -1))
+            {
+                ++confirmed_mines_count;
+            }
+
+            if (open_num + confirmed_mines_count == rows * cols) // 如果打开的格子数 + 确认的雷数 == 总格子数 ,则游戏完成
+            {
+                this->minesVm->instance()->status = 2; // 设置状态为 finished
+                this->minesVm->notifyUi(rt, "status"); // 通知UI更新状态
+            }
         }
     }
-    if (isFinished)
+    if (this->minesVm->instance()->status == 3) // 如果失败,把所有雷显示出来
+    {
+        for (int row = 0; row < rows; ++row)
+        {
+            for (int col = 0; col < cols; ++col)
+            {
+                std::shared_ptr<prism::rn::PrismModelProxy<Mine>> cell = this->minesVm->instance()->mines->list()->at(row * cols + col);
+                if (cell->instance()->visual_value == 10)
+                    continue;
+                else if (cell->instance()->visual_value == 11)
+                    continue;
+                else if (cell->instance()->value == 9)
+                {
+                    m_visualMat(row, col) = 9;
+                    cell->instance()->visual_value = 9;
+                    cell->notifyUi(rt, "visual_value");
+                }
+            }
+        }
+    }
+    else if (this->minesVm->instance()->status == 2) // 如果完成,把所有雷标为旗
     {
         for (int row = 0; row < rows; ++row)
         {
@@ -280,7 +301,6 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
                 {
                     m_visualMat(row, col) = 11;
                     cell->instance()->visual_value = 11;
-                    // emitOnValueChanged(row * cols + col);
                     cell->notifyUi(rt, "visual_value");
                 }
             }
@@ -293,19 +313,6 @@ void NativeViewModelA::private_open(int index, jsi::Runtime *rt)
         this->minesVm->instance()->flag_num = flagsNumber;
         this->minesVm->notifyUi(rt_, "flag_num"); // 通知UI更新旗子数量
     }
-    // if (m_isFirst)
-    //{
-    //     std::stringstream ss;
-    //     for (int i = 0; i < rows; ++i)
-    //     {
-    //         for (int j = 0; j < cols; ++j)
-    //         {
-    //             ss << std::setw(4) << minesVm->instance()->mines->list()->at(i * cols + j)->instance()->value;
-    //         }
-    //         ss << std::endl;
-    //     }
-    //     std::cerr << ss.str().c_str() << std::endl;
-    // }
 }
 
 void NativeViewModelA::initCells(jsi::Runtime &rt)
@@ -398,6 +405,8 @@ void NativeViewModelA::private_regen()
 
 void NativeViewModelA::recurse_open(int i)
 {
+    if (this->minesVm->instance()->status >= 2) // 如果不是 playing 状态,则不处理
+        return;
     int rows = this->minesVm->instance()->row_num;
     int cols = this->minesVm->instance()->col_num;
 

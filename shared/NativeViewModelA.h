@@ -64,6 +64,7 @@ struct MinesVM
     0: unstarted
     1: playing
     2: finished
+    3: failed
      */
     int status = 0;
     int cellPixcelSize = 40;
