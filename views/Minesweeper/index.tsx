@@ -206,11 +206,13 @@ export default function Minesweeper(): React.JSX.Element {
                         }
                         ViewModelA.initCells()
                         ViewModelA.regen()
-                        vm.cellPixcelSize = vm.cellPixcelSize * scale.value
+                        vm.cellPixcelSize = cellSize * scale_total.value
                         setTimeout(() => {
+                            origin.value = { x: 0, y: 0 };
                             transform.value = identity3
-                            translation.value = { x: 0, y: 0 },
+                            translation.value = { x: 0, y: 0 }
                             scale.value = 1
+                            scale_total.value = 1
                         }, 1);
                         setIsopen(false)
                     }}
@@ -385,10 +387,10 @@ export default function Minesweeper(): React.JSX.Element {
 
 
 
-    const ref = useAnimatedRef();
     const origin = useSharedValue({ x: 0, y: 0 });
     const transform = useSharedValue(identity3);
     const scale = useSharedValue(1);
+    const scale_total = useSharedValue(1);
     const translation = useSharedValue({ x: 0, y: 0 });
 
 
@@ -414,10 +416,9 @@ export default function Minesweeper(): React.JSX.Element {
 
     const pinch = Gesture.Pinch()
         .onStart((event) => {
-            const measured = measure(ref);
             origin.value = {
-                x: event.focalX - measured.width / 2,
-                y: event.focalY - measured.height / 2,
+                x: event.focalX - vm.cellPixcelSize* numColumns / 2,
+                y: event.focalY - vm.cellPixcelSize* numRows / 2,
             };
         })
         .onChange((event) => {
@@ -429,6 +430,7 @@ export default function Minesweeper(): React.JSX.Element {
             matrix = scaleMatrix(matrix, scale.value);
             matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
             transform.value = multiply3(matrix, transform.value);
+            scale_total.value *= scale.value
             scale.value = 1;
         });
 
@@ -492,11 +494,14 @@ export default function Minesweeper(): React.JSX.Element {
                       <Button
                             onPress={() => {
                                 ViewModelA.regen()
-                                vm.cellPixcelSize = vm.cellPixcelSize * scale.value
+                                vm.cellPixcelSize = cellSize * scale_total.value
                                 setTimeout(() => {
+                                    origin .value = { x: 0, y: 0 };
                                     transform.value = identity3
-                                    translation.value = { x: 0, y: 0 },
-                                    scale.value = 1
+                                    translation.value = { x: 0, y: 0 }
+                                    scale.value = 1 
+                                    scale_total.value = 1
+
                                 }, 1);
                             }}
                             title="🙂"
@@ -526,7 +531,6 @@ export default function Minesweeper(): React.JSX.Element {
 
                     <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
                         <Animated.View
-                            ref={ref}
                             collapsable={false}
                             style={[{overflow: 'hidden', flex: 1, width: actualWidth + (vm.col_num - 1) * 0.2,backgroundColor: (() => styles.noneClinetArea.color2)() }]}>
 
@@ -536,7 +540,7 @@ export default function Minesweeper(): React.JSX.Element {
                                         data={mines}
                                         bounces={false}
                                         overScrollMode="never"
-                                        key={`${numRows}-${numColumns}`}
+                                        key={`${numRows}-${numColumns}-${vm.cellPixcelSize}`}
                                         contentContainerStyle={[styles.flatlist, { width: actualWidth, height: actualHeight }]}
                                         renderItem={renderitem}
                                         numColumns={numColumns}
