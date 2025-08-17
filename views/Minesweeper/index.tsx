@@ -7,15 +7,30 @@ import { Icon, Dialog, CheckBox, Input } from '@rneui/themed';
 
 import { LayoutChangeEvent, TouchableWithoutFeedback, FlatList, Text, View, StyleSheet, Dimensions, Alert } from 'react-native';
 import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    useAnimatedGestureHandler,
+      useAnimatedRef,
     runOnJS,
+    useAnimatedGestureHandler,
+    useAnimatedStyle,
+    useSharedValue,
+  measure,
 } from 'react-native-reanimated';
 
 import { GestureHandlerRootView, Gesture, GestureDetector, PanGestureHandler, PinchGestureHandler, TextInput } from 'react-native-gesture-handler';
 import React from 'react';
 import { Scale } from '../../theme/Scale';
+
+import { identity3, Matrix3, multiply3 } from 'react-native-redash';
+
+function translateMatrix(matrix: Matrix3, x: number, y: number) {
+  'worklet';
+  return multiply3(matrix, [1, 0, x, 0, 1, y, 0, 0, 1]);
+}
+
+function scaleMatrix(matrox: Matrix3, value: number) {
+  'worklet';
+  return multiply3(matrox, [value, 0, 0, 0, value, 0, 0, 0, 1]);
+}
+
 
 function binding<T>(
     item: { [key: string]: any; register: (key: string, cb: (v: T) => void) => string; unregister: (id: any) => string },
@@ -52,6 +67,10 @@ export default function Minesweeper(): React.JSX.Element {
 
     var MIN_SCALE = 0.5;
     const MAX_SCALE = 8;
+    const insets = useSafeAreaInsets();
+
+
+    const [settingDilogOpen, setSettingDilogOpen] = useState(false);
 
     //if (actualHeight > actualWidth) {
     //    MIN_SCALE = screenHeight / actualHeight;
@@ -60,142 +79,6 @@ export default function Minesweeper(): React.JSX.Element {
     //    MIN_SCALE = screenWidth / actualWidth;
     //}
 
-    const [pinchEnabled, setPinchEnabled] = useState(true);
-    const [panEnabled, setPanEnabled] = useState(true);
-
-
-    const scale = useSharedValue(1);
-    //const scale = useSharedValue(MIN_SCALE);
-    const offsetX = useSharedValue(0);
-    const offsetY = useSharedValue(0);
-    const x_basi = useSharedValue(0);
-    const y_basi = useSharedValue(0);
-    const xyHand = useSharedValue(0)
-
-    const pre_eventFocalX = useSharedValue(0);
-    const pre_eventFocalY = useSharedValue(0);
-
-
-    const pre_numberofpointer = useSharedValue(0)
-
-
-
-    const pinchRef = useRef(null);
-    const panRef = useRef(null);
-
-    const insets = useSafeAreaInsets();
-
-
-    const [settingDilogOpen, setSettingDilogOpen] = useState(false);
-
-
-
-
-    const pinchHandler = useAnimatedGestureHandler<any>({
-        onStart: (event, ctx: any) => {
-            ctx.startScale = scale.value;
-            ctx.startOffsetX = offsetX.value;
-            ctx.startOffsetY = offsetY.value;
-            ctx.focalX = event.focalX;
-            ctx.focalY = event.focalY;
-            pre_eventFocalX.value = event.focalX
-            pre_eventFocalY.value = event.focalY
-            x_basi.value = 0
-            y_basi.value = 0
-            if(event.numberOfPointers >= 2)
-                xyHand.value = -1
-        },
-        onActive: (event, ctx: any) => {
-
-            let focalDeltaX = event.focalX - ctx.focalX;
-            let focalDeltaY = event.focalY - ctx.focalY;
-
-            let newScale = ctx.startScale * event.scale;
-            //newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
-            let scaleDiff = newScale / ctx.startScale;
-
-            let factor = 1.0
-            if (pre_numberofpointer.value != event.numberOfPointers) {
-                x_basi.value += pre_eventFocalX.value - event.focalX
-                y_basi.value += pre_eventFocalY.value - event.focalY
-
-
-                //if (event.numberOfPointers < 2) { //
-                //    factor = scaleDiff 
-                //}
-                //else {
-                //    factor = scaleDiff 
-                //}
-            }
-
-
-
-
-
-
-
-            offsetX.value = ctx.startOffsetX + factor * (focalDeltaX + x_basi.value) + (scaleDiff - 1) * ((actualWidth / 2) - ctx.focalX + ctx.startOffsetX)
-            offsetY.value = ctx.startOffsetY + factor * (focalDeltaY + y_basi.value) + (scaleDiff - 1) * ((actualHeight / 2) - ctx.focalY + ctx.startOffsetY)
-
-
-            pre_numberofpointer.value = event.numberOfPointers
-            pre_eventFocalX.value = event.focalX
-            pre_eventFocalY.value = event.focalY
-
-            scale.value = newScale;
-
-
-            if(event.numberOfPointers >= 2)
-                xyHand.value = -1
-
-        },
-    })
-
-
-    const panHandler = useAnimatedGestureHandler({
-        onStart: (event, ctx: any) => {
-            ctx.startX = offsetX.value;
-            ctx.startY = offsetY.value;
-            ctx.translationX0 = event.translationX
-            ctx.translationY0 = event.translationY
-            xyHand.value = 1
-
-        },
-        onEnd(eventPayload, context, isCanceledOrFailed) {
-        },
-        onCancel(eventPayload, context, isCanceledOrFailed) {
-
-        },
-        onFinish(eventPayload, context, isCanceledOrFailed) {
-
-        },
-        onFail(eventPayload, context, isCanceledOrFailed) {
-
-        },
-        onActive: (event, ctx: any) => {
-
-            if (xyHand.value == 1) {
-                offsetX.value = ctx.startX + event.translationX - ctx.translationX0
-                offsetY.value = ctx.startY + event.translationY - ctx.translationY0
-                //offsetX.value = ctx.startX + event.translationX - ctx.translationX0 + focalX.value;
-                //offsetY.value = ctx.startY + event.translationY - ctx.translationY0 + focalY.value;
-
-            }
-            else {
-            }
-
-        },
-    });
-
-    const animatedStyle = useAnimatedStyle(() => {
-        return {
-            transform: [
-                { translateX: offsetX.value },
-                { translateY: offsetY.value },
-                { scale: scale.value },
-            ],
-        };
-    });
 
     const LabelInput = React.memo(({ label, obj,prop }: { label: string, obj:any,prop: string}) => {
         const [value, setValue] = binding(obj, prop)
@@ -325,8 +208,8 @@ export default function Minesweeper(): React.JSX.Element {
                         ViewModelA.regen()
                         vm.cellPixcelSize = vm.cellPixcelSize * scale.value
                         setTimeout(() => {
-                            offsetX.value = 0;
-                            offsetY.value = 0;
+                            transform.value = identity3
+                            translation.value = { x: 0, y: 0 },
                             scale.value = 1
                         }, 1);
                         setIsopen(false)
@@ -500,6 +383,84 @@ export default function Minesweeper(): React.JSX.Element {
         );
     })
 
+
+
+    const ref = useAnimatedRef();
+    const origin = useSharedValue({ x: 0, y: 0 });
+    const transform = useSharedValue(identity3);
+    const scale = useSharedValue(1);
+    const translation = useSharedValue({ x: 0, y: 0 });
+
+
+    const pan = Gesture.Pan()
+        .averageTouches(true)
+        .onChange((event) => {
+            translation.value = {
+                x: event.translationX,
+                y: event.translationY,
+            };
+        })
+        .onEnd(() => {
+            let matrix = identity3;
+            matrix = translateMatrix(
+                matrix,
+                translation.value.x,
+                translation.value.y
+            );
+            transform.value = multiply3(matrix, transform.value);
+            translation.value = { x: 0, y: 0 };
+        });
+
+
+    const pinch = Gesture.Pinch()
+        .onStart((event) => {
+            const measured = measure(ref);
+            origin.value = {
+                x: event.focalX - measured.width / 2,
+                y: event.focalY - measured.height / 2,
+            };
+        })
+        .onChange((event) => {
+            scale.value = event.scale;
+        })
+        .onEnd(() => {
+            let matrix = identity3;
+            matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
+            matrix = scaleMatrix(matrix, scale.value);
+            matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
+            transform.value = multiply3(matrix, transform.value);
+            scale.value = 1;
+        });
+
+    const animatedStyle = useAnimatedStyle(() => {
+        let matrix = identity3;
+
+        if (translation.value.x !== 0 || translation.value.y !== 0) {
+            matrix = translateMatrix(
+                matrix,
+                translation.value.x,
+                translation.value.y
+            );
+        }
+
+        if (scale.value !== 1) {
+            matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
+            matrix = scaleMatrix(matrix, scale.value);
+            matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
+        }
+
+        matrix = multiply3(matrix, transform.value);
+
+        return {
+            transform: [
+                { translateX: matrix[2] },
+                { translateY: matrix[5] },
+                { scaleX: matrix[0] },
+                { scaleY: matrix[4] },
+            ],
+        };
+    });
+
     return (
 
         <View style={{ flex: 1 }}>
@@ -533,8 +494,8 @@ export default function Minesweeper(): React.JSX.Element {
                                 ViewModelA.regen()
                                 vm.cellPixcelSize = vm.cellPixcelSize * scale.value
                                 setTimeout(() => {
-                                    offsetX.value = 0;
-                                    offsetY.value = 0;
+                                    transform.value = identity3
+                                    translation.value = { x: 0, y: 0 },
                                     scale.value = 1
                                 }, 1);
                             }}
@@ -563,6 +524,35 @@ export default function Minesweeper(): React.JSX.Element {
                     </View>
 
 
+                    <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
+                        <Animated.View
+                            ref={ref}
+                            collapsable={false}
+                            style={[{overflow: 'hidden', flex: 1, width: actualWidth + (vm.col_num - 1) * 0.2,backgroundColor: (() => styles.noneClinetArea.color2)() }]}>
+
+                            <Animated.View style={[animatedStyle, { width: actualWidth + (vm.col_num - 1) * 0.2, height: actualHeight + (vm.row_num - 1) * 0.5, borderWidth: 3, borderColor: "lightgray" }]}>
+                                <View>
+                                    <FlatList
+                                        data={mines}
+                                        bounces={false}
+                                        overScrollMode="never"
+                                        key={`${numRows}-${numColumns}`}
+                                        contentContainerStyle={[styles.flatlist, { width: actualWidth, height: actualHeight }]}
+                                        renderItem={renderitem}
+                                        numColumns={numColumns}
+                                        initialNumToRender={mines.length}
+                                        keyExtractor={(item) => item.uuid}
+                                        scrollEnabled={false} // 禁止内建滚动，靠 pan 拖动
+                                    />
+                                </View>
+                            </Animated.View>
+
+                        </Animated.View>
+                    </GestureDetector>
+
+      
+
+                {/**
                     <GestureHandlerRootView
                         style={
                             {
@@ -594,6 +584,7 @@ export default function Minesweeper(): React.JSX.Element {
                             </Animated.View>
                         </PinchGestureHandler>
                     </GestureHandlerRootView>
+                 */}
                 </View>
             </View>
 
