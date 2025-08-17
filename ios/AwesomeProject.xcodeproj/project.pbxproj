@@ -11,8 +11,8 @@
 		238AF7CB2DD9BB03002D49E5 /* ViewmodelsProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 238AF7CA2DD9BB03002D49E5 /* ViewmodelsProvider.mm */; };
 		23FD02802E48AEEB0046A9EF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 23FD027F2E48AEEB0046A9EF /* Assets.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
-		97B4990001F449BD8EBBB073 /* digital-7 (mono).ttf in Resources */ = {isa = PBXBuildFile; fileRef = 824DB1D0EDAD4DBC8FC7A965 /* digital-7 (mono).ttf */; };
 		FD7B4C14EA7AD869AB6B5173 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		FE47C2B0E71542A2B21B72F0 /* Digital-7 Mono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C4763D3F7EBE491E92032FE6 /* Digital-7 Mono.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,8 +27,8 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-AwesomeProject.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AwesomeProject.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = AwesomeProject/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = AwesomeProject/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		824DB1D0EDAD4DBC8FC7A965 /* digital-7 (mono).ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "digital-7 (mono).ttf"; path = "../assets/fonts/digital-7 (mono).ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		C4763D3F7EBE491E92032FE6 /* Digital-7 Mono.ttf */ = {isa = PBXFileReference; name = "Digital-7 Mono.ttf"; path = "../assets/fonts/Digital-7 Mono.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -117,7 +117,7 @@
 		D394B2A5C87044D2AADBD6F2 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				824DB1D0EDAD4DBC8FC7A965 /* digital-7 (mono).ttf */,
+				C4763D3F7EBE491E92032FE6 /* Digital-7 Mono.ttf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -187,7 +187,7 @@
 			files = (
 				FD7B4C14EA7AD869AB6B5173 /* PrivacyInfo.xcprivacy in Resources */,
 				23FD02802E48AEEB0046A9EF /* Assets.xcassets in Resources */,
-				97B4990001F449BD8EBBB073 /* digital-7 (mono).ttf in Resources */,
+				FE47C2B0E71542A2B21B72F0 /* Digital-7 Mono.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
