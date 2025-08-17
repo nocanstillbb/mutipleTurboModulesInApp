@@ -101,7 +101,8 @@ export default function Minesweeper(): React.JSX.Element {
             pre_eventFocalY.value = event.focalY
             x_basi.value = 0
             y_basi.value = 0
-            xyHand.value = -1
+            if(event.numberOfPointers >= 2)
+                xyHand.value = -1
         },
         onActive: (event, ctx: any) => {
 
@@ -143,7 +144,8 @@ export default function Minesweeper(): React.JSX.Element {
             scale.value = newScale;
 
 
-            xyHand.value = -1
+            if(event.numberOfPointers >= 2)
+                xyHand.value = -1
 
         },
     })
