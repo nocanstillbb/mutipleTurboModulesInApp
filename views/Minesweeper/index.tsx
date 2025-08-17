@@ -574,7 +574,7 @@ export default function Minesweeper(): React.JSX.Element {
                     >
 
                         <PinchGestureHandler onGestureEvent={pinchHandler} ref={pinchRef} simultaneousHandlers={panRef} enabled={pinchEnabled} >
-                            <Animated.View >
+                            <Animated.View  style={{overflow:'hidden'}}>
                                 <PanGestureHandler onGestureEvent={panHandler} ref={panRef} simultaneousHandlers={pinchRef} enabled={panEnabled}  >
                                     <Animated.View style={[animatedStyle, { width: actualWidth + (vm.col_num - 1) * 0.2, height: actualHeight + (vm.row_num - 1) * 0.5, borderWidth: 3, borderColor: "lightgray" }]}>
                                         <FlatList
