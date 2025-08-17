@@ -15,6 +15,7 @@ import Animated, {
 
 import { GestureHandlerRootView, Gesture, GestureDetector, PanGestureHandler, PinchGestureHandler, TextInput } from 'react-native-gesture-handler';
 import React from 'react';
+import { Scale } from '../../theme/Scale';
 
 function binding<T>(
     item: { [key: string]: any; register: (key: string, cb: (v: T) => void) => string; unregister: (id: any) => string },
@@ -202,10 +203,10 @@ export default function Minesweeper(): React.JSX.Element {
 
         return(
             <View style={{ flexDirection: "row", height: 30, alignContent: "center", justifyContent: 'center' }} >
-                <Text style={{ color:(()=>{ return tmpdiff!=3 ?"lightgray":"black"})(), textAlign: 'center', padding: 8, fontSize: 16, marginRight: 5, marginLeft: 5 }}>{label}</Text>
+                <Text style={{ color:(()=>{ return tmpdiff!=3 ?"lightgray":"black"})(), textAlign: 'center', padding: Scale.width(8), fontSize: Scale.font(16), marginRight: Scale.width(5), marginLeft: Scale.width(5) }}>{label}</Text>
                 <TextInput
                 readOnly={tmpdiff != 3 }
-                    style={[{color:(()=>{ return tmpdiff!=3 ?"lightgray":"black"})(), flex: 1, marginRight: 80, borderWidth: 1, borderColor: '#ccc', padding: 8, borderRadius: 4, fontSize: 16 }]}
+                    style={[{color:(()=>{ return tmpdiff!=3 ?"lightgray":"black"})(), flex: 1, marginRight: Scale.width(80), borderWidth: Scale.width(1), borderColor: '#ccc', padding: Scale.width(8), borderRadius: Scale.width(4), fontSize: Scale.font(16) }]}
                     keyboardType="numeric" // 数字键盘
                     value={String(value)}
                     onChangeText={(text) => {
@@ -232,6 +233,7 @@ export default function Minesweeper(): React.JSX.Element {
             {['1', '2', '3','4'].map((l, i) => (
                 <CheckBox
                     key={i}
+                    textStyle={{ color: 'gray', fontSize: Scale.font(16) }} 
                     title={
                         (() => {
                             switch (i) {
@@ -343,7 +345,7 @@ export default function Minesweeper(): React.JSX.Element {
         return (
             <TouchableOpacity onPress={() => {
                 vm.mode ^= 1
-            }} style={{ position: 'absolute', left: 0, bottom: 0, width: 100, height: 100, padding: 8 }} >
+            }} style={{ position: 'absolute', left: 0, bottom: 0, width: 100, height: 100, padding: Scale.width(8) }} >
                 <Icon
                     type='font-awesome'
                     name='flag'
@@ -359,7 +361,7 @@ export default function Minesweeper(): React.JSX.Element {
             
             <TouchableOpacity onPress={() => {
                 setSettingDilogOpen(true)
-            }} style={{ position: 'absolute', right: 0, bottom: 0, width: 100, height: 100, padding: 8 }} >
+            }} style={{ position: 'absolute', right: 0, bottom: 0, width: 100, height: 100, padding: Scale.width(8) }} >
                 <Icon
                     type='font-awesome'
                     name='gear'
@@ -440,7 +442,7 @@ export default function Minesweeper(): React.JSX.Element {
                                         return "black"
                                 })()
                                 ,
-                                fontSize: cellSize / 2.5,
+                                fontSize: Scale.font(cellSize / 2.5),
                                 fontWeight: 'bold'
                             }]}
 
@@ -479,8 +481,8 @@ export default function Minesweeper(): React.JSX.Element {
     const MineNumber = React.memo(() => {
         const [flag_num, setFlagNumber] = binding(vm, "flag_num")
         return (
-            <View style={{ flexDirection: 'row', backgroundColor: "black" ,padding:2}}>
-                <Text style={{ color: "red", fontFamily: 'Digital-7 Mono', fontSize: 44 }}>
+            <View style={{ flexDirection: 'row', backgroundColor: "black" ,padding:Scale.width(2)}}>
+                <Text style={{ color: "red", fontFamily: 'Digital-7 Mono', fontSize: Scale.font(44) }}>
                 {String(vm.mine_num - flag_num).padStart(3, '0')}
                 </Text>
             </View>
@@ -490,8 +492,8 @@ export default function Minesweeper(): React.JSX.Element {
     const Timecomponent = React.memo(() => {
         const [eTime_ms, setETime] = binding(vm, "eTime_ms")
         return (
-            <View style={{ flexDirection: 'row', backgroundColor: "black" ,padding:2}}>
-                <Text style={{ color: "red", fontFamily: 'Digital-7 Mono', fontSize: 44 }}>
+            <View style={{ flexDirection: 'row', backgroundColor: "black" ,padding:Scale.width(2)}}>
+                <Text style={{ color: "red", fontFamily: 'Digital-7 Mono', fontSize: Scale.font(44) }}>
                     {String(Math.floor(eTime_ms / 1000)).padStart(3, '0')}{/** .{String(Math.floor((eTime_ms % 1000) / 10.0)).padStart(2, '0')}*/}
                 </Text>
             </View>
@@ -643,7 +645,7 @@ const styles = StyleSheet.create({
         textAlignVertical: "center",
         justifyContent: 'center',
         alignItems: 'center',
-        fontSize: 16,
+        fontSize: Scale.font(16),
     },
     insetBox: {
         width: 150,
