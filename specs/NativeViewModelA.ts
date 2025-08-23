@@ -23,6 +23,9 @@ type MineVM = {
   cellPixcelSize: number;
   difficulties: number;
   tmp_difficulties: number;
+  tmp_row_num: number;
+  tmp_col_num: number;
+  tmp_mine_num: number;
 };
 
 

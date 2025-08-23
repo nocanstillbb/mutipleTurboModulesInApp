@@ -71,9 +71,12 @@ struct MinesVM
 
     int difficulties = 2;     // 0: easy, 1: medium, 2: hard, 3: custom
     int tmp_difficulties = 2; // 0: easy, 1: medium, 2: hard, 3: custom
+    int tmp_row_num = 16;
+    int tmp_col_num = 30;
+    int tmp_mine_num = 99;
     std::shared_ptr<prism::rn::PrismModelListProxy<Mine>> mines = std::make_shared<prism::rn::PrismModelListProxy<Mine>>();
 };
-PRISM_FIELDS(MinesVM, mode, row_num, col_num, mine_num, mines, eTime_ms, flag_num, status, cellPixcelSize, difficulties, tmp_difficulties);
+PRISM_FIELDS(MinesVM, mode, row_num, col_num, mine_num, mines, eTime_ms, flag_num, status, cellPixcelSize, difficulties, tmp_difficulties, tmp_row_num, tmp_col_num, tmp_mine_num);
 
 namespace facebook::react
 {

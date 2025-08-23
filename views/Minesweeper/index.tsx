@@ -105,7 +105,10 @@ export default function Minesweeper(): React.JSX.Element {
         return (<Dialog
             isVisible={isopen}
             onShow={() => {
-                setTmpDifficulties(vm.difficulties)
+                vm.tmp_difficulties = vm.difficulties
+                vm.tmp_col_num = vm.col_num
+                vm.tmp_row_num = vm.row_num
+                vm.tmp_mine_num = vm.mine_num
             }}
             onBackdropPress={() => {
                 //setIsopen(false)
@@ -142,21 +145,21 @@ export default function Minesweeper(): React.JSX.Element {
                         switch (i) {
                             case 0:
                                 //return "简单 (8x8,10雷)";
-                                vm.row_num = 8;
-                                vm.col_num = 8;
-                                vm.mine_num = 10;
+                                vm.tmp_row_num = 8;
+                                vm.tmp_col_num = 8;
+                                vm.tmp_mine_num = 10;
                                 break;
                             case 1:
                                 //return "中等 (16x16,40雷)";
-                                vm.row_num = 16;
-                                vm.col_num = 16;
-                                vm.mine_num = 40;
+                                vm.tmp_row_num = 16;
+                                vm.tmp_col_num = 16;
+                                vm.tmp_mine_num = 40;
                                 break;
                             case 2:
                                 //return "困难 (16x30,99雷)";
-                                vm.row_num = 16
-                                vm.col_num = 30
-                                vm.mine_num = 99
+                                vm.tmp_row_num = 16
+                                vm.tmp_col_num = 30
+                                vm.tmp_mine_num = 99
                                 break;
                             case 3: //自定义
                                 break;
@@ -169,9 +172,9 @@ export default function Minesweeper(): React.JSX.Element {
                 />)) }
 
             <View style={{ gap: 10 }}>
-                <LabelInput label='行数' obj={vm}  prop='row_num'  />
-                <LabelInput label='列数' obj={vm}  prop='col_num'  />
-                <LabelInput label='雷数' obj={vm}  prop='mine_num'  />
+                <LabelInput label='行数' obj={vm}  prop='tmp_row_num'  />
+                <LabelInput label='列数' obj={vm}  prop='tmp_col_num'  />
+                <LabelInput label='雷数' obj={vm}  prop='tmp_mine_num'  />
             </View>
 
             <Dialog.Actions>
@@ -180,30 +183,10 @@ export default function Minesweeper(): React.JSX.Element {
                     titleStyle={[{ color: "gray" }]} 
                     onPress={() => {
                         vm.difficulties = vm.tmp_difficulties
-                        switch (tmpdiff) {
-                            case 0:
-                                //return "简单 (8x8,10雷)";
-                                vm.row_num = 8;
-                                vm.col_num = 8;
-                                vm.mine_num = 10;
-                                break;
-                            case 1:
-                                //return "中等 (16x16,40雷)";
-                                vm.row_num = 16;
-                                vm.col_num = 16;
-                                vm.mine_num = 40;
-                                break;
-                            case 2:
-                                //return "困难 (16x30,99雷)";
-                                vm.row_num = 16
-                                vm.col_num = 30
-                                vm.mine_num = 99
-                                break;
-                            case 3: //自定义
-                                break;
-                            default:
-                            //return "";
-                        }
+
+                        vm.row_num = vm.tmp_row_num;
+                        vm.col_num = vm.tmp_col_num;
+                        vm.mine_num = vm.tmp_mine_num;
                         ViewModelA.initCells()
                         ViewModelA.regen()
                         vm.cellPixcelSize = cellSize * scale_total.value
