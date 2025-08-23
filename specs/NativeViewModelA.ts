@@ -26,8 +26,8 @@ type MineVM = {
 };
 
 
-export interface Spec extends TurboModule {
 
+export interface Spec extends TurboModule {
   readonly getMinesVm: () => MineVM;
   readonly initCells: () => void;
   readonly regen: () => void;

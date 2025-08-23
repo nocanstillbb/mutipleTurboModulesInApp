@@ -51,8 +51,8 @@ function binding<T>(
 
 
 
+const vm = ViewModelA.getMinesVm()
 export default function Minesweeper(): React.JSX.Element {
-    const vm = ViewModelA.getMinesVm()
     const mines = vm.mines.list;
 
     const numRows = vm.row_num;
@@ -61,7 +61,7 @@ export default function Minesweeper(): React.JSX.Element {
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
 
-    const [cellSize, setCellSize] = binding(vm, "cellPixcelSize")
+    const [cellSize, setCellSize] = binding<number>(vm, "cellPixcelSize")
     const actualHeight = cellSize * numRows;
     const actualWidth = cellSize * numColumns;
 
@@ -81,8 +81,8 @@ export default function Minesweeper(): React.JSX.Element {
 
 
     const LabelInput = React.memo(({ label, obj,prop }: { label: string, obj:any,prop: string}) => {
-        const [value, setValue] = binding(obj, prop)
-        const [tmpdiff, setTemdiff] = binding(vm, "tmp_difficulties")
+        const [value, setValue] = binding<number>(obj, prop)
+        const [tmpdiff, setTemdiff] = binding<number>(vm, "tmp_difficulties")
 
         return(
             <View style={{ flexDirection: "row", height: 30, alignContent: "center", justifyContent: 'center' }} >
@@ -101,7 +101,7 @@ export default function Minesweeper(): React.JSX.Element {
     })
 
     const SettingDialog = React.memo(({ isopen, setIsopen }: { isopen: boolean, setIsopen: Function }) => {
-        const [tmpdiff, setTmpDifficulties] = binding(vm, "tmp_difficulties")
+        const [tmpdiff, setTmpDifficulties] = binding<number>(vm, "tmp_difficulties")
         return (<Dialog
             isVisible={isopen}
             onShow={() => {
@@ -224,7 +224,7 @@ export default function Minesweeper(): React.JSX.Element {
 
 
     const FloatButton = React.memo(() => {
-        const [vv, setMode] = binding(vm, "mode")
+        const [vv, setMode] = binding<number>(vm, "mode")
 
 
         return (
@@ -241,7 +241,7 @@ export default function Minesweeper(): React.JSX.Element {
         );
     })
     const FloatButton_right = React.memo(() => {
-        const [vv, setMode] = binding(vm, "mode")
+        const [vv, setMode] = binding<number>(vm, "mode")
         return (
             
             <TouchableOpacity onPress={() => {
@@ -265,8 +265,8 @@ export default function Minesweeper(): React.JSX.Element {
     )
     const RenderItem = React.memo(({ item, index }: { item: typeof mines[0], index: number }) => {
 
-        const [vv, setVv] = binding(item, "visual_value");
-        const [pressed, setPressed] = binding(item, "isPressed");
+        const [vv, setVv] = binding<number>(item, "visual_value");
+        const [pressed, setPressed] = binding<number>(item, "isPressed");
         useEffect(() => {
             if (pressed) {
                 const timer = setTimeout(() => {
@@ -276,7 +276,7 @@ export default function Minesweeper(): React.JSX.Element {
                 return () => clearTimeout(timer); // 清理旧的定时器
             }
         }, [pressed]);
-        const [cellSize, setCellSize] = binding(vm, "cellPixcelSize")
+        const [cellSize, setCellSize] = binding<number>(vm, "cellPixcelSize")
         return (
             <TouchableWithoutFeedback onPress={() => {
                 ViewModelA.open(index)
@@ -364,7 +364,7 @@ export default function Minesweeper(): React.JSX.Element {
 
 
     const MineNumber = React.memo(() => {
-        const [flag_num, setFlagNumber] = binding(vm, "flag_num")
+        const [flag_num, setFlagNumber] = binding<number>(vm, "flag_num")
         return (
             <View style={{ flexDirection: 'row', backgroundColor: "black" ,padding:Scale.width(2)}}>
                 <Text style={{ color: "red", fontFamily: 'Digital-7 Mono', fontSize: Scale.font(44) }}>
@@ -375,7 +375,7 @@ export default function Minesweeper(): React.JSX.Element {
     })
 
     const Timecomponent = React.memo(() => {
-        const [eTime_ms, setETime] = binding(vm, "eTime_ms")
+        const [eTime_ms, setETime] = binding<number>(vm, "eTime_ms")
         return (
             <View style={{ flexDirection: 'row', backgroundColor: "black" ,padding:Scale.width(2)}}>
                 <Text style={{ color: "red", fontFamily: 'Digital-7 Mono', fontSize: Scale.font(44) }}>
@@ -529,53 +529,29 @@ export default function Minesweeper(): React.JSX.Element {
                     </View>
 
 
-                    <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
-                        <Animated.View
-                            collapsable={false}
-                            style={[{overflow: 'hidden', flex: 1, width: actualWidth + (vm.col_num - 1) * 0.2,backgroundColor: (() => styles.noneClinetArea.color2)() }]}>
+                    <View style={{flex:1, overflow:'hidden'}}>
+                        <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
+                            <Animated.View
+                                collapsable={false}
+                                style={[{
+                                    flex: 1,
+                                    backgroundColor: (() => styles.noneClinetArea.color2)()
+                                }]}>
 
-                            <Animated.View style={[animatedStyle, { width: actualWidth + (vm.col_num - 1) * 0.2, height: actualHeight + (vm.row_num - 1) * 0.5, borderWidth: 3, borderColor: "lightgray" }]}>
-                                <View>
-                                    <FlatList
-                                        data={mines}
-                                        bounces={false}
-                                        overScrollMode="never"
-                                        key={`${numRows}-${numColumns}-${vm.cellPixcelSize}`}
-                                        contentContainerStyle={[styles.flatlist, { width: actualWidth, height: actualHeight }]}
-                                        renderItem={renderitem}
-                                        numColumns={numColumns}
-                                        initialNumToRender={mines.length}
-                                        keyExtractor={(item) => item.uuid}
-                                        scrollEnabled={false} // 禁止内建滚动，靠 pan 拖动
-                                    />
-                                </View>
-                            </Animated.View>
-
-                        </Animated.View>
-                    </GestureDetector>
-
-      
-
-                {/**
-                    <GestureHandlerRootView
-                        style={
-                            {
-                                flex: 1,
-                                overflow: "hidden",
-                                backgroundColor: (() => styles.noneClinetArea.color2)()
-                            }
-                        }
-                    >
-
-                        <PinchGestureHandler onGestureEvent={pinchHandler} ref={pinchRef} simultaneousHandlers={panRef} enabled={pinchEnabled} >
-                            <Animated.View  style={{overflow:'hidden'}}>
-                                <PanGestureHandler onGestureEvent={panHandler} ref={panRef} simultaneousHandlers={pinchRef} enabled={panEnabled}  >
-                                    <Animated.View style={[animatedStyle, { width: actualWidth + (vm.col_num - 1) * 0.2, height: actualHeight + (vm.row_num - 1) * 0.5, borderWidth: 3, borderColor: "lightgray" }]}>
+                                <Animated.View style={[animatedStyle,
+                                    {
+                                        width: actualWidth + 6,
+                                        height: actualHeight + 6,
+                                        margin: -3,
+                                        borderWidth: 3,
+                                        borderColor: "lightgray"
+                                    }]}>
+                                    <View>
                                         <FlatList
                                             data={mines}
                                             bounces={false}
                                             overScrollMode="never"
-                                            key={`${numRows}-${numColumns}`}
+                                            key={`${numRows}-${numColumns}-${vm.cellPixcelSize}`}
                                             contentContainerStyle={[styles.flatlist, { width: actualWidth, height: actualHeight }]}
                                             renderItem={renderitem}
                                             numColumns={numColumns}
@@ -583,12 +559,13 @@ export default function Minesweeper(): React.JSX.Element {
                                             keyExtractor={(item) => item.uuid}
                                             scrollEnabled={false} // 禁止内建滚动，靠 pan 拖动
                                         />
-                                    </Animated.View>
-                                </PanGestureHandler>
+                                    </View>
+                                </Animated.View>
+
                             </Animated.View>
-                        </PinchGestureHandler>
-                    </GestureHandlerRootView>
-                 */}
+                        </GestureDetector>
+                    </View>
+                    
                 </View>
             </View>
 
